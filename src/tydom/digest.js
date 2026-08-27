@@ -17,20 +17,28 @@ function md5(value) {
 }
 
 /**
- * Extract the `nonce` challenge from a WWW-Authenticate header value.
- * Tydom always challenges with Digest + qop="auth"; the realm it advertises
- * is ignored on purpose — the box expects the FIXED realm for its mode
- * ("ServiceMedia" for the mediation relay, "protected area" for a local
- * connection), not necessarily whatever it put in the header.
+ * Extract the `realm` and `nonce` from a WWW-Authenticate header value.
+ * Per RFC 2617, HA1 = MD5(username:realm:password) MUST use the realm the
+ * server itself advertised — different Tydom boxes/firmwares have been seen
+ * advertising different casings (e.g. "Protected Area" vs. the commonly
+ * assumed "protected area"); a client that substitutes its own guessed
+ * constant computes a response the box's own math never matches, so the
+ * connection is silently rejected right after the handshake instead of
+ * failing loudly.
  * @param {string} headerValue - raw WWW-Authenticate header value.
- * @returns {string|undefined} the nonce, or undefined if not a Digest challenge.
+ * @returns {{ realm: string, nonce: string }|undefined} the challenge, or
+ *   undefined if there is no header or it carries no nonce.
  */
-export function parseNonce(headerValue) {
+export function parseChallenge(headerValue) {
   if (!headerValue) {
     return undefined;
   }
-  const match = /nonce="([^"]+)"/.exec(headerValue);
-  return match ? match[1] : undefined;
+  const nonceMatch = /nonce="([^"]*)"/.exec(headerValue);
+  if (!nonceMatch) {
+    return undefined;
+  }
+  const realmMatch = /realm="([^"]*)"/.exec(headerValue);
+  return { realm: realmMatch ? realmMatch[1] : undefined, nonce: nonceMatch[1] };
 }
 
 /**

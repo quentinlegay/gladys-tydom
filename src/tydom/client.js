@@ -9,11 +9,11 @@
 //
 // Local vs. mediation mode (mirrors tydom2mqtt's TydomClient): connecting to
 // the Delta Dore mediation relay (no `host` given) uses the '\x02' command
-// prefix and the "ServiceMedia" Digest realm; connecting directly to the box
-// on the LAN (a `host` IP given) uses no prefix and the "protected area"
-// realm. Both still complete the Digest handshake when the box challenges it
-// — some local boxes don't, which is why the nonce probe below degrades to an
-// unauthenticated connection instead of failing outright.
+// prefix; connecting directly to the box on the LAN (a `host` IP given) uses
+// no prefix. Both complete the Digest handshake when the box challenges it,
+// using the realm THE BOX ITSELF advertised (see #fetchChallenge/connect) —
+// some local boxes don't challenge at all, which is why the probe degrades
+// to an unauthenticated connection instead of failing outright.
 // -----------------------------------------------------------------------------
 
 import { EventEmitter } from 'node:events';
@@ -21,7 +21,7 @@ import https from 'node:https';
 import { constants as cryptoConstants, randomBytes } from 'node:crypto';
 import WebSocket from 'ws';
 import { createLogger } from '@gladysassistant/integration-sdk';
-import { buildDigestHeader, parseNonce } from './digest.js';
+import { buildDigestHeader, parseChallenge } from './digest.js';
 import { buildCommandFrame, parseIncomingMessage } from './frame.js';
 import { MEDIATION_URL } from './const.js';
 
@@ -71,11 +71,22 @@ export class TydomClient extends EventEmitter {
 
   /** Open the connection: Digest probe, then the WebSocket upgrade. */
   async connect() {
-    const nonce = await this.#fetchNonce();
+    const challenge = await this.#fetchChallenge();
     const headers = {};
-    if (nonce) {
+    if (challenge) {
+      // Use the realm the box ITSELF advertised, never a guessed constant:
+      // HA1 = MD5(username:realm:password) per RFC 2617, so a client-side
+      // realm that does not byte-for-byte match the server's own value
+      // (different Tydom firmwares have been seen advertising "Protected
+      // Area" vs. the commonly assumed "protected area") computes a
+      // response the box's own math never matches — the WebSocket upgrade
+      // still succeeds (it isn't gated on auth), but the box then silently
+      // closes the session moments later once it finds the client was never
+      // really authenticated. The realm fallback below only covers the
+      // theoretical case of a challenge with a nonce but no realm= field.
+      const realm = challenge.realm ?? (this.remoteMode ? 'ServiceMedia' : 'protected area');
       logger.info(
-        `Digest challenge received from Tydom (${this.host}), realm="${this.remoteMode ? 'ServiceMedia' : 'protected area'}": authenticating`,
+        `Digest challenge received from Tydom (${this.host}), realm="${realm}": authenticating`,
       );
       headers.Authorization = buildDigestHeader({
         method: 'GET',
@@ -86,8 +97,8 @@ export class TydomClient extends EventEmitter {
         uri: this.path,
         username: this.mac,
         password: this.password,
-        realm: this.remoteMode ? 'ServiceMedia' : 'protected area',
-        nonce,
+        realm,
+        nonce: challenge.nonce,
       });
     } else {
       // Deliberately at info level (not debug): whether the box actually
@@ -206,8 +217,9 @@ export class TydomClient extends EventEmitter {
    * treated as anonymous, and the box then drops the *later* WebSocket
    * connection outright (no clean close frame) once it realizes the session
    * was never authenticated.
+   * @returns {Promise<{realm: string, nonce: string}|undefined>}
    */
-  #fetchNonce() {
+  #fetchChallenge() {
     return new Promise((resolve) => {
       const req = https.request(
         {
@@ -233,7 +245,7 @@ export class TydomClient extends EventEmitter {
               `Digest probe response from Tydom (${this.host}): status=${res.statusCode}, ` +
                 `www-authenticate=${res.headers['www-authenticate'] ? `"${res.headers['www-authenticate']}"` : '<absent>'}`,
             );
-            resolve(parseNonce(res.headers['www-authenticate']));
+            resolve(parseChallenge(res.headers['www-authenticate']));
           });
         },
       );
