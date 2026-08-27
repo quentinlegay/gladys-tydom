@@ -74,6 +74,9 @@ export class TydomClient extends EventEmitter {
     const nonce = await this.#fetchNonce();
     const headers = {};
     if (nonce) {
+      logger.info(
+        `Digest challenge received from Tydom (${this.host}), realm="${this.remoteMode ? 'ServiceMedia' : 'protected area'}": authenticating`,
+      );
       headers.Authorization = buildDigestHeader({
         method: 'GET',
         // The digest `uri` is the request-uri only (path + query), never the
@@ -87,7 +90,13 @@ export class TydomClient extends EventEmitter {
         nonce,
       });
     } else {
-      logger.debug('No Digest challenge from the Tydom box: connecting without authentication');
+      // Deliberately at info level (not debug): whether the box actually
+      // challenges local connections is exactly what needs to be visible
+      // while diagnosing an immediate post-connect close — this is a
+      // once-per-connection-attempt line, not a spammy one.
+      logger.info(
+        `No Digest challenge received from Tydom (${this.host}): connecting without authentication`,
+      );
     }
 
     await new Promise((resolve, reject) => {
@@ -219,14 +228,19 @@ export class TydomClient extends EventEmitter {
         },
         (res) => {
           res.resume(); // drain the body, only the header is needed
-          res.on('end', () => resolve(parseNonce(res.headers['www-authenticate'])));
+          res.on('end', () => {
+            logger.info(
+              `Digest probe response from Tydom (${this.host}): status=${res.statusCode}, ` +
+                `www-authenticate=${res.headers['www-authenticate'] ? `"${res.headers['www-authenticate']}"` : '<absent>'}`,
+            );
+            resolve(parseNonce(res.headers['www-authenticate']));
+          });
         },
       );
       req.on('timeout', () => req.destroy());
       req.on('error', (err) => {
-        logger.debug(
-          'Digest nonce probe failed, will try an unauthenticated connection:',
-          err.message,
+        logger.info(
+          `Digest nonce probe to Tydom (${this.host}) failed, will try an unauthenticated connection: ${err.message}`,
         );
         resolve(undefined);
       });
