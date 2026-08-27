@@ -1,16 +1,16 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Tydom",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Control your Delta Dore Tydom shutters, lights and sensors from Gladys.",
+    "fr": "Contrôlez vos volets, lumières et capteurs Delta Dore Tydom depuis Gladys."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/quentinlegay/gladys-tydom:1.0.0",
   "gladys_version": ">=4.86.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
+  "cover_image": "https://raw.githubusercontent.com/quentinlegay/gladys-tydom/main/cover.png",
+  "categories": ["security", "lighting", "environment"],
   "transports": ["local", "cloud"],
   "config_schema": [
     {
@@ -18,60 +18,82 @@
       "type": "section",
       "label": { "en": "Getting started", "fr": "Pour commencer" },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "This integration talks directly to your Tydom box (Delta Dore), the same protocol used by the tydom2mqtt project. You need the box's mac address and password, found in the Tydom mobile app or via the Delta Dore account fields below. See the Documentation link for the full walkthrough.",
+        "fr": "Cette intégration dialogue directement avec votre box Tydom (Delta Dore), avec le même protocole que le projet tydom2mqtt. Il vous faut l'adresse mac de la box et son mot de passe, disponibles dans l'application Tydom ou via les champs de compte Delta Dore ci-dessous. Voir le lien Documentation pour le guide complet."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/tydom2mqtt/tydom2mqtt",
+          "label": {
+            "en": "tydom2mqtt (protocol reference)",
+            "fr": "tydom2mqtt (référence du protocole)"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
+      "key": "tydom_mac",
+      "type": "string",
+      "label": { "en": "Tydom mac address", "fr": "Adresse mac Tydom" },
       "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+        "en": "Printed on the box sticker (e.g. 001A2B3C4D5E), separators are ignored.",
+        "fr": "Imprimée sur l'étiquette de la box (ex. 001A2B3C4D5E), les séparateurs sont ignorés."
       },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "placeholder": { "en": "001A2B3C4D5E", "fr": "001A2B3C4D5E" },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
+      "key": "tydom_password",
+      "type": "secret",
+      "label": { "en": "Tydom password", "fr": "Mot de passe Tydom" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "Leave empty if you fill the Delta Dore account fields below instead: it gets resolved and saved here automatically.",
+        "fr": "Laissez vide si vous renseignez les champs de compte Delta Dore ci-dessous : il sera résolu et enregistré ici automatiquement."
       },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "required": false
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
+      "key": "deltadore",
+      "type": "section",
+      "label": {
+        "en": "Or: resolve it from your Delta Dore account",
+        "fr": "Ou : le résoudre depuis votre compte Delta Dore"
+      },
+      "description": {
+        "en": "One-time only: filled once, the integration fetches the gateway password from these credentials and saves it into the field above, so your Delta Dore account password is never stored or replayed afterwards.",
+        "fr": "Une seule fois : une fois renseignés, l'intégration récupère le mot de passe de la box avec ces identifiants et l'enregistre dans le champ ci-dessus, votre mot de passe de compte Delta Dore n'est ensuite plus jamais stocké ni réutilisé."
+      }
+    },
+    {
+      "key": "deltadore_login",
+      "type": "string",
+      "label": { "en": "Delta Dore account email", "fr": "E-mail du compte Delta Dore" },
+      "required": false
+    },
+    {
+      "key": "deltadore_password",
+      "type": "secret",
+      "label": { "en": "Delta Dore account password", "fr": "Mot de passe du compte Delta Dore" },
+      "required": false
+    },
+    {
+      "key": "tydom_host",
+      "type": "string",
+      "label": { "en": "Local IP address (optional)", "fr": "Adresse IP locale (optionnelle)" },
+      "description": {
+        "en": "Enables the local (LAN) connection instead of Delta Dore's relay. Find it in your router's device list.",
+        "fr": "Active la connexion locale (LAN) au lieu du relais Delta Dore. Trouvable dans la liste des appareils de votre routeur."
+      },
+      "placeholder": { "en": "192.168.1.42", "fr": "192.168.1.42" },
+      "required": false
     },
     {
       "key": "poll_frequency",
       "type": "number",
       "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
       "description": {
-        "en": "How often sensors are polled, in seconds.",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes."
+        "en": "How often the whole box state is re-synced, on top of the real-time updates it pushes on its own.",
+        "fr": "Fréquence à laquelle l'état complet de la box est resynchronisé, en plus des mises à jour temps réel qu'elle envoie spontanément."
       },
       "required": false,
       "default": 300,
@@ -81,22 +103,9 @@
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "refresh",
+      "label": { "en": "Rescan the Tydom box", "fr": "Rescanner la box Tydom" },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ]
 }
