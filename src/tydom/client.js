@@ -33,7 +33,20 @@ const logger = createLogger({ name: 'tydom:client' });
 // option re-allows it — required for EVERY TLS connection to a Tydom box,
 // local or through the mediation relay, both the throwaway nonce probe and
 // the WebSocket upgrade below.
-const secureOptions = cryptoConstants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+//
+// SSL_OP_LEGACY_SERVER_CONNECT (0x4) is the second, DISTINCT half of this:
+// tydom2mqtt's own TydomClient sets exactly this flag (`ssl_context.options
+// |= 0x4`), and only for a LOCAL connection — it permits the INITIAL
+// handshake with a server that does not support RFC 5746 secure
+// renegotiation at all, as opposed to ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+// above which only covers a RE-negotiation on an already-established
+// session. Without it, a local box's embedded TLS stack can complete the
+// handshake and accept the WebSocket upgrade, then cleanly close the
+// session (WS code 1000) moments later. Applied unconditionally (mediation
+// relay included) since it only widens compatibility, never restricts it.
+const secureOptions =
+  cryptoConstants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION |
+  cryptoConstants.SSL_OP_LEGACY_SERVER_CONNECT;
 
 export class TydomClient extends EventEmitter {
   /**
