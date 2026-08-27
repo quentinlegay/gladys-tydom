@@ -133,8 +133,10 @@ service.on('connected', async ({ transport }) => {
   await publishTransports();
 });
 
-service.on('disconnected', async () => {
-  logger.warn('Disconnected from Tydom, reconnecting...');
+service.on('disconnected', async (info) => {
+  logger.warn(
+    `Disconnected from Tydom (code=${info?.code}, reason=${info?.reason || '<none>'}), reconnecting...`,
+  );
   await publishTransports();
 });
 

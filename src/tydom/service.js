@@ -166,7 +166,7 @@ export class TydomService extends EventEmitter {
         this.emit('stateChanged', update);
       }
     });
-    client.on('disconnected', () => {
+    client.on('disconnected', (info) => {
       if (this.stopped || this.client !== client) {
         return;
       }
@@ -176,7 +176,7 @@ export class TydomService extends EventEmitter {
         clearInterval(this.refreshTimer);
         this.refreshTimer = null;
       }
-      this.emit('disconnected');
+      this.emit('disconnected', info);
       this.#scheduleReconnect();
     });
     client.on('error', (err) => {

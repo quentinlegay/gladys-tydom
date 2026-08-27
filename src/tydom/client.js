@@ -18,7 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import https from 'node:https';
-import { constants as cryptoConstants } from 'node:crypto';
+import { constants as cryptoConstants, randomBytes } from 'node:crypto';
 import WebSocket from 'ws';
 import { createLogger } from '@gladysassistant/integration-sdk';
 import { buildDigestHeader, parseNonce } from './digest.js';
@@ -176,6 +176,14 @@ export class TydomClient extends EventEmitter {
    * that requires no local authentication answers without a WWW-Authenticate
    * header — resolved as `undefined`, and `connect()` proceeds unauthenticated
    * rather than failing.
+   *
+   * The request headers deliberately shape this as a real WebSocket-upgrade
+   * attempt (Sec-WebSocket-Key/Version, Accept), not just a bare GET with
+   * Connection/Upgrade: some Tydom firmware only returns the Digest
+   * challenge on a request it recognizes as one — a bare GET can get silently
+   * treated as anonymous, and the box then drops the *later* WebSocket
+   * connection outright (no clean close frame) once it realizes the session
+   * was never authenticated.
    */
   #fetchNonce() {
     return new Promise((resolve) => {
@@ -187,7 +195,13 @@ export class TydomClient extends EventEmitter {
           method: 'GET',
           rejectUnauthorized: false,
           secureOptions,
-          headers: { Connection: 'Upgrade', Upgrade: 'websocket' },
+          headers: {
+            Connection: 'Upgrade',
+            Upgrade: 'websocket',
+            Accept: '*/*',
+            'Sec-WebSocket-Key': randomBytes(16).toString('base64'),
+            'Sec-WebSocket-Version': '13',
+          },
           timeout: 10_000,
         },
         (res) => {
