@@ -162,8 +162,9 @@ export class TydomService extends EventEmitter {
     );
   }
 
-  async #connectWithRetry() {
-    if (this.stopped) {
+  /** @param {number} generation - snapshot of #generation when this attempt was scheduled. */
+  async #connectWithRetry(generation) {
+    if (this.stopped || generation !== this.#generation) {
       return;
     }
     try {
@@ -171,12 +172,26 @@ export class TydomService extends EventEmitter {
         throw new Error('Missing Tydom mac address');
       }
       const password = await this.#resolvePassword();
+      if (generation !== this.#generation) {
+        return; // superseded while resolving credentials
+      }
       const preferLocal = this.config.GLADYS_PREFER_LOCAL !== false;
       const host = preferLocal && this.config.tydom_host ? this.config.tydom_host : undefined;
 
       const client = this.#createClient({ mac: this.config.tydom_mac, password, host });
-      this.#wireClient(client);
+      this.#wireClient(client, generation);
       await client.connect();
+
+      if (generation !== this.#generation) {
+        // A newer start()/stop() ran while the handshake was in flight: this
+        // socket is stale before it ever became `this.client` — drop it
+        // immediately instead of letting two live connections fight over the
+        // box's single session slot.
+        logger.debug('Discarding a Tydom connection superseded while it was still connecting');
+        client.removeAllListeners();
+        client.disconnect();
+        return;
+      }
 
       this.client = client;
       this.reconnectAttempt = 0;
@@ -196,26 +211,35 @@ export class TydomService extends EventEmitter {
           .catch((err) => logger.warn('Periodic refresh failed:', err.message));
       }, intervalSeconds * 1000);
     } catch (err) {
+      if (generation !== this.#generation) {
+        return; // superseded: a newer attempt owns the retry loop now
+      }
       this.transport = 'unreachable';
       this.emit('connectionError', err);
-      this.#scheduleReconnect();
+      this.#scheduleReconnect(generation);
     }
   }
 
-  #wireClient(client) {
+  #wireClient(client, generation) {
     client.on('config', (payload) => {
+      if (generation !== this.#generation) {
+        return;
+      }
       const changed = this.registry.applyConfig(payload);
       if (changed) {
         this.emit('catalogChanged');
       }
     });
     client.on('data', (payload) => {
+      if (generation !== this.#generation) {
+        return;
+      }
       for (const update of this.registry.applyDevicesData(payload)) {
         this.emit('stateChanged', update);
       }
     });
     client.on('disconnected', (info) => {
-      if (this.stopped || this.client !== client) {
+      if (this.stopped || generation !== this.#generation || this.client !== client) {
         return;
       }
       this.client = null;
@@ -225,15 +249,18 @@ export class TydomService extends EventEmitter {
         this.refreshTimer = null;
       }
       this.emit('disconnected', info);
-      this.#scheduleReconnect();
+      this.#scheduleReconnect(generation);
     });
     client.on('error', (err) => {
+      if (generation !== this.#generation) {
+        return;
+      }
       logger.warn('Tydom connection error:', err.message);
     });
   }
 
-  #scheduleReconnect() {
-    if (this.stopped || this.reconnectTimer) {
+  #scheduleReconnect(generation) {
+    if (this.stopped || this.reconnectTimer || generation !== this.#generation) {
       return;
     }
     const delay = Math.min(
@@ -244,7 +271,7 @@ export class TydomService extends EventEmitter {
     logger.info(`Reconnecting to Tydom in ${Math.round(delay / 1000)}s`);
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
-      this.#connectWithRetry();
+      this.#connectWithRetry(generation);
     }, delay);
   }
 }

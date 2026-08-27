@@ -23,6 +23,7 @@ class FakeClient extends EventEmitter {
     // does not clear the client's own event listeners — that is
     // TydomService#teardown's job, called just before this.
     this.connected = false;
+    this.disconnectCalled = true;
   }
 
   async getConfigsFile() {
@@ -39,6 +40,25 @@ class FakeClient extends EventEmitter {
 
   async putDeviceData(deviceId, endpointId, name, value) {
     this.sent.push({ deviceId, endpointId, name, value });
+  }
+}
+
+// A client whose connect() only resolves when the test calls releaseConnect(),
+// used to simulate a connection attempt still in flight while a NEW start()
+// (or stop()) happens — the exact race that used to open two live WebSockets
+// to the same Tydom box (see src/tydom/service.js's #generation comment).
+class SlowFakeClient extends FakeClient {
+  connect() {
+    return new Promise((resolve) => {
+      this._releaseConnect = () => {
+        this.connected = true;
+        resolve();
+      };
+    });
+  }
+
+  releaseConnect() {
+    this._releaseConnect();
   }
 }
 
@@ -266,4 +286,63 @@ test('stop() tears down the client and prevents any further reconnect attempt', 
   // A disconnect arriving after stop() must not schedule a reconnect.
   created.emit('disconnected');
   assert.equal(service.reconnectTimer, null);
+});
+
+test('a start() that supersedes an in-flight connect discards the stale socket', async (t) => {
+  const clients = [];
+  const service = new TydomService({
+    createClient: (options) => {
+      const client = clients.length === 0 ? new SlowFakeClient(options) : new FakeClient(options);
+      clients.push(client);
+      return client;
+    },
+  });
+  t.after(() => service.stop());
+
+  const firstStart = service.start(baseConfig({ tydom_mac: '111111111111' }));
+  // Let the first start() run far enough to actually open its (slow)
+  // connection before superseding it: credential resolution alone already
+  // hops through a microtask, so a bare synchronous supersede would abort it
+  // before it ever reaches the network — a different code path than the one
+  // this test targets (see the next test for that earlier-abort case).
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(clients.length, 1, 'the first attempt has opened its (still pending) connection');
+
+  // The first connect() is still pending: start() a second time (as
+  // onConfigUpdated would) before it resolves.
+  const secondStart = service.start(baseConfig({ tydom_mac: '222222222222' }));
+  await secondStart;
+
+  assert.equal(service.client, clients[1], 'the second, up-to-date connection wins');
+  assert.equal(service.client.mac, '222222222222');
+
+  // The first connection finally completes its handshake — too late, it must
+  // be discarded rather than overwriting the live one.
+  clients[0].releaseConnect();
+  await firstStart;
+
+  assert.equal(service.client, clients[1], 'the stale connection never becomes the active one');
+  assert.equal(clients[0].disconnectCalled, true, 'the superseded socket is closed, not leaked');
+});
+
+test('stop() while connecting discards the in-flight connection instead of adopting it', async (t) => {
+  let client;
+  const service = new TydomService({
+    createClient: (options) => {
+      client = new SlowFakeClient(options);
+      return client;
+    },
+  });
+  t.after(() => service.stop());
+
+  const starting = service.start(baseConfig());
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(client, 'the connection attempt reached the network before being stopped');
+
+  service.stop();
+  client.releaseConnect();
+  await starting;
+
+  assert.equal(service.client, null, 'stop() must win even though connect() resolved afterwards');
+  assert.equal(client.disconnectCalled, true);
 });

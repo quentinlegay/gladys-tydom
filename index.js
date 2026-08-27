@@ -108,9 +108,13 @@ gladys.onAction('refresh', async () => {
 });
 
 // --- Configuration updated by the user ---------------------------------------
-gladys.onConfigUpdated(async (newConfig) => {
+// Re-fetch via getConfig() (HTTP, documented by the SDK as returning "all
+// values, secrets included") rather than trusting the WebSocket push payload
+// directly: this is the one authoritative source for `tydom_password`, so the
+// fingerprint guard in restartTydomService() only ever sees a real change.
+gladys.onConfigUpdated(async () => {
   logger.info('onConfigUpdated -> new configuration received');
-  config = normalizeConfig(newConfig);
+  config = normalizeConfig(await gladys.getConfig());
   await restartTydomService();
 });
 
