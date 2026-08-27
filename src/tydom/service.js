@@ -18,6 +18,30 @@ const logger = createLogger({ name: 'tydom:service' });
 const MIN_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 60_000;
 const MIN_POLL_FREQUENCY_SECONDS = 30;
+const REFRESH_RESPONSE_TIMEOUT_MS = 10_000;
+
+/**
+ * Resolve once `eventName` next fires on `emitter`, or after `timeoutMs`
+ * elapses — whichever comes first. Never rejects: a box that stays silent
+ * should not turn a refresh into a hard failure, it should just give up
+ * waiting and let the caller see whatever state is already known.
+ */
+function waitForEvent(emitter, eventName, timeoutMs) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      emitter.removeListener(eventName, finish);
+      resolve();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    emitter.once(eventName, finish);
+  });
+}
 
 export class TydomService extends EventEmitter {
   /** @param {{ createClient?: (options: object) => TydomClient }} [options] */
@@ -36,10 +60,21 @@ export class TydomService extends EventEmitter {
   }
 
   #createClient;
+  // Bumped by every start()/stop(): a connect attempt (or a scheduled
+  // reconnect) started under an older generation checks it after every await
+  // and aborts as soon as it no longer matches, instead of possibly
+  // finishing AFTER a newer attempt already has a live connection. Without
+  // this, onConfigUpdated firing while a backoff-scheduled reconnect is
+  // already mid-flight can open a SECOND WebSocket to the same box — Tydom
+  // boxes accept only one session at a time and cleanly close (code 1000)
+  // whichever one becomes redundant, which looks like an endless
+  // connect/disconnect loop from the logs.
+  #generation = 0;
 
   /**
    * (Re)start the service with a configuration. Safe to call again after a
-   * config change: tears down the previous connection first.
+   * config change, including while a previous connection attempt is still in
+   * flight: the new generation supersedes it, see `#generation` above.
    * @param {object} config - normalized integration config (see src/config.js).
    * @param {{ onPasswordResolved?: (password: string) => Promise<void> | void }} [options]
    */
@@ -47,13 +82,15 @@ export class TydomService extends EventEmitter {
     this.stopped = false;
     this.config = config;
     this.onPasswordResolved = onPasswordResolved;
+    this.#generation += 1;
     this.#teardown();
-    await this.#connectWithRetry();
+    await this.#connectWithRetry(this.#generation);
   }
 
   /** Stop for good: no further reconnection attempts. */
   stop() {
     this.stopped = true;
+    this.#generation += 1;
     this.#teardown();
   }
 
@@ -61,13 +98,24 @@ export class TydomService extends EventEmitter {
     return this.client?.connected === true;
   }
 
-  /** Force an immediate re-discovery + state refresh (manual rescan / action). */
+  /**
+   * Force an immediate re-discovery + state refresh (manual rescan / action).
+   * `/configs/file` and `/devices/data` answer as separate, asynchronous
+   * 'config'/'data' events on the client (Tydom's own push-based protocol has
+   * no request/response pairing) — this waits for the catalog response (up to
+   * REFRESH_RESPONSE_TIMEOUT_MS) so callers reading `registry.list()` right
+   * after `await refresh()` see the refreshed catalog instead of racing
+   * ahead of the box's answer.
+   */
   async refresh() {
     if (!this.connected) {
       throw new Error('Not connected to the Tydom box');
     }
-    await this.client.getConfigsFile();
-    await this.client.getDevicesData();
+    const client = this.client;
+    const configReceived = waitForEvent(client, 'config', REFRESH_RESPONSE_TIMEOUT_MS);
+    await client.getConfigsFile();
+    await configReceived;
+    await client.getDevicesData();
   }
 
   /** Send a raw command to one registered endpoint (see src/devices/*.js). */

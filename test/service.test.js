@@ -132,6 +132,37 @@ test('a configured host is ignored when GLADYS_PREFER_LOCAL is false', async (t)
   assert.equal(service.transport, 'cloud');
 });
 
+test('refresh() waits for the catalog response instead of racing ahead of it', async (t) => {
+  let created;
+  const service = new TydomService({
+    createClient: (options) => {
+      created = new FakeClient(options);
+      return created;
+    },
+  });
+  t.after(() => service.stop());
+  await service.start(baseConfig());
+
+  const refreshPromise = service.refresh();
+  // The box has not answered yet: a caller reading the registry here (the
+  // exact race that used to make the "refresh" action report 0 devices)
+  // must still see nothing, proving refresh() is genuinely still pending.
+  assert.equal(service.registry.list().length, 0);
+
+  setImmediate(() => {
+    created.emit('config', {
+      endpoints: [{ id_endpoint: 10, id_device: 1, name: 'Volet', last_usage: 'shutter' }],
+    });
+  });
+
+  await refreshPromise;
+  assert.equal(
+    service.registry.list().length,
+    1,
+    'refresh only resolves once the catalog response was applied',
+  );
+});
+
 test('commandDevice resolves the catalog entry and forwards to the client', async (t) => {
   let created;
   const service = new TydomService({
