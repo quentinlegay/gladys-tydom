@@ -18,6 +18,7 @@
 
 import { EventEmitter } from 'node:events';
 import https from 'node:https';
+import { constants as cryptoConstants } from 'node:crypto';
 import WebSocket from 'ws';
 import { createLogger } from '@gladysassistant/integration-sdk';
 import { buildDigestHeader, parseNonce } from './digest.js';
@@ -25,6 +26,14 @@ import { buildCommandFrame, parseIncomingMessage } from './frame.js';
 import { MEDIATION_URL } from './const.js';
 
 const logger = createLogger({ name: 'tydom:client' });
+
+// Tydom boxes are old embedded devices whose TLS stack still uses legacy
+// session renegotiation; OpenSSL 3.x (Node 18+) refuses it by default and
+// fails the handshake with "unsafe legacy renegotiation disabled". This
+// option re-allows it — required for EVERY TLS connection to a Tydom box,
+// local or through the mediation relay, both the throwaway nonce probe and
+// the WebSocket upgrade below.
+const secureOptions = cryptoConstants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
 
 export class TydomClient extends EventEmitter {
   /**
@@ -76,6 +85,7 @@ export class TydomClient extends EventEmitter {
         // a shortcut (the connection is still authenticated by the Digest
         // credentials above and, once connected, by the mac/password pair).
         rejectUnauthorized: false,
+        secureOptions,
         handshakeTimeout: 15_000,
       });
       const onError = (err) => {
@@ -176,6 +186,7 @@ export class TydomClient extends EventEmitter {
           path: this.path,
           method: 'GET',
           rejectUnauthorized: false,
+          secureOptions,
           headers: { Connection: 'Upgrade', Upgrade: 'websocket' },
           timeout: 10_000,
         },
