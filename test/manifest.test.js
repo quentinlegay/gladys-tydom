@@ -7,21 +7,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
-import { DEFAULT_CONFIG } from '../src/config.js';
+import { DEFAULT_CONFIG, normalizeConfig } from '../src/config.js';
+import { CONTAINER_NAME, buildContainerEnv } from '../src/container.js';
 
 const manifest = JSON.parse(
   await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
 );
 
-// Actions registered outside the blueprints (see index.js).
-const REGISTRY_LEVEL_ACTIONS = ['identify'];
+// Actions registered in index.js.
+const HANDLED_ACTIONS = ['resync'];
 
 test('every manifest action has a registered handler', () => {
-  const handled = new Set([
-    ...DEVICE_BLUEPRINTS.flatMap((bp) => Object.keys(bp.actions ?? {})),
-    ...REGISTRY_LEVEL_ACTIONS,
-  ]);
+  const handled = new Set(HANDLED_ACTIONS);
   for (const action of manifest.actions ?? []) {
     assert.ok(handled.has(action.key), `manifest action "${action.key}" has no handler`);
   }
@@ -57,7 +54,7 @@ test('config_schema defaults stay consistent with DEFAULT_CONFIG', () => {
 
 test('section fields are purely presentational', () => {
   const sections = manifest.config_schema.filter((f) => f.type === 'section');
-  assert.ok(sections.length > 0, 'the template demonstrates at least one section block');
+  assert.ok(sections.length > 0, 'the manifest declares at least one section block');
   for (const section of sections) {
     // A section stores NO value: declaring `required`, `default` or
     // `placeholder` on it rejects the manifest, and its key must never leak
@@ -80,19 +77,32 @@ test('section fields are purely presentational', () => {
   }
 });
 
-test('dynamic selects declare a source and no static options', () => {
-  const allFields = [
-    ...manifest.config_schema,
-    ...(manifest.actions ?? []).flatMap((a) => a.fields ?? []),
-  ];
-  const dynamicSelects = allFields.filter((f) => f.source !== undefined);
-  assert.ok(dynamicSelects.length > 0, 'the template demonstrates a dynamic select');
-  for (const field of dynamicSelects) {
-    assert.equal(field.source, 'devices', 'the only core-defined source in V1 is "devices"');
-    assert.equal(
-      field.options,
-      undefined,
-      `field "${field.key}": declaring source and options together rejects the manifest`,
-    );
+test('every config key except sections has a default in DEFAULT_CONFIG', () => {
+  for (const field of manifest.config_schema.filter((f) => f.type !== 'section')) {
+    assert.ok(field.key in DEFAULT_CONFIG, `DEFAULT_CONFIG.${field.key} is missing`);
+  }
+});
+
+test('passwords are declared as secrets', () => {
+  for (const field of manifest.config_schema.filter((f) => /password/.test(f.key))) {
+    assert.equal(field.type, 'secret', `${field.key} must be a secret field`);
+  }
+});
+
+test('the tydom2mqtt sub-container is declared, pinned and started by the code', () => {
+  const container = manifest.containers.find((c) => c.name === CONTAINER_NAME);
+  assert.ok(container, `the manifest declares the "${CONTAINER_NAME}" sub-container`);
+  assert.match(container.docker_image, /^ghcr\.io\/tydom2mqtt\/tydom2mqtt:\d+\.\d+\.\d+$/);
+  // Credentials only exist at runtime: nothing starts before startContainer.
+  assert.equal(container.start, 'manual');
+  assert.equal(container.env, undefined, 'the public manifest never carries credentials');
+});
+
+test('the sub-container env never carries Gladys reserved keys', () => {
+  const env = buildContainerEnv(
+    normalizeConfig({ tydom_mac: 'm', tydom_password: 'p', mqtt_host: 'h', mqtt_user: 'u' }),
+  );
+  for (const key of Object.keys(env)) {
+    assert.ok(!key.startsWith('GLADYS_'), `${key} is reserved`);
   }
 });

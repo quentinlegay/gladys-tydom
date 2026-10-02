@@ -1,33 +1,49 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { normalizeConfig, missingConfig, DEFAULT_CONFIG } from '../src/config.js';
 
 test('normalizeConfig returns the defaults when called with no argument', () => {
   assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('normalizeConfig cleans the MAC address', () => {
+  assert.equal(normalizeConfig({ tydom_mac: ' 00:1a:25:12:34:56 ' }).tydom_mac, '001A25123456');
 });
 
 test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+  const config = normalizeConfig({ mqtt_port: '1884', tydom_polling_interval: '600' });
+  assert.equal(config.mqtt_port, 1884);
+  assert.equal(config.tydom_polling_interval, 600);
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('an empty Tydom IP falls back to the Delta Dore cloud', () => {
+  assert.equal(normalizeConfig({ tydom_ip: ' ' }).tydom_ip, 'mediation.tydom.com');
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('manage_container defaults to true and only an explicit false disables it', () => {
+  assert.equal(normalizeConfig().manage_container, true);
+  assert.equal(normalizeConfig({ manage_container: false }).manage_container, false);
+});
+
+test('missingConfig explains what is missing', () => {
+  assert.match(missingConfig(normalizeConfig()).en, /MQTT/);
+  assert.match(missingConfig(normalizeConfig({ mqtt_host: 'h' })).en, /MAC/);
+  assert.match(missingConfig(normalizeConfig({ mqtt_host: 'h', tydom_mac: 'm' })).en, /password/);
+  assert.equal(
+    missingConfig(normalizeConfig({ mqtt_host: 'h', tydom_mac: 'm', tydom_password: 'p' })),
+    null,
+  );
+  assert.equal(
+    missingConfig(
+      normalizeConfig({
+        mqtt_host: 'h',
+        tydom_mac: 'm',
+        deltadore_login: 'a@b.c',
+        deltadore_password: 'p',
+      }),
+    ),
+    null,
+  );
+  // tydom2mqtt run by the user: only the broker matters.
+  assert.equal(missingConfig(normalizeConfig({ mqtt_host: 'h', manage_container: false })), null);
 });

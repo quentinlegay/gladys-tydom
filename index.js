@@ -1,12 +1,12 @@
 // -----------------------------------------------------------------------------
-// Entry point of the Gladys external integration.
+// Entry point of the Tydom integration for Gladys.
 //
-// Role of this file: wire the SDK to the device catalog (src/devices/). It holds
-// NO hardware logic: all the control "work" lives in the device modules. This
-// file only:
-//   1. instantiates the SDK (connection, auth, reconnection: handled for you);
-//   2. registers the event handlers BEFORE connect();
-//   3. connects and publishes the discovered devices.
+//   Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> this
+//
+// This file only wires the SDK to:
+//   - src/container.js : starts tydom2mqtt with the user configuration;
+//   - src/tydom/       : reads tydom2mqtt's MQTT discovery and states, sends
+//                        the Gladys commands back.
 //
 // Environment variables provided by the Gladys supervisor to the container:
 //   - GLADYS_HOST_API_URL         (host API URL)
@@ -16,122 +16,104 @@
 // -----------------------------------------------------------------------------
 
 import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
-import { normalizeConfig } from './src/config.js';
-import {
-  DEVICE_BLUEPRINTS,
-  buildDiscoveredDevices,
-  buildTransportEntries,
-  findBlueprintByDevice,
-  identifyDevice,
-} from './src/devices/index.js';
+import { missingConfig, normalizeConfig } from './src/config.js';
+import { applyContainer } from './src/container.js';
+import { TydomBridge } from './src/tydom/bridge.js';
 
 const gladys = new GladysIntegration();
+const bridge = new TydomBridge(gladys);
 
 // Current configuration (hot-reloaded via onConfigUpdated).
 let config = normalizeConfig();
 
-// Cleanup functions for the "push" subscriptions (e.g. the motion sensor).
-let pushCleanups = [];
-
 // --- Discovery: Gladys asks for the list of devices --------------------------
 gladys.onScanRequest(async () => {
-  logger.info('onScanRequest -> publishing discovered devices');
-  await gladys.publishDiscoveredDevices(buildDiscoveredDevices(gladys, config));
+  logger.info('onScanRequest -> publishing the Tydom devices');
+  // Ask tydom2mqtt for a fresh export too: new devices show up a few seconds
+  // later through the 'devices' event below.
+  await bridge.requestResync().catch((err) => logger.warn(`Resync not sent: ${err.message}`));
+  await gladys.publishDiscoveredDevices(bridge.buildDevices());
+});
+
+bridge.on('devices', (devices) => {
+  logger.info(`${devices.length} Tydom device(s) announced by tydom2mqtt`);
+  gladys
+    .publishDiscoveredDevices(devices)
+    .catch((err) => logger.error('publishDiscoveredDevices failed', err));
 });
 
 // --- Command: the user acts on a controllable feature ------------------------
 gladys.onSetValue(async (device, feature, value) => {
   logger.info(`onSetValue <- ${feature.external_id} = ${value}`);
-  const blueprint = findBlueprintByDevice(gladys, device);
-  if (!blueprint || typeof blueprint.onSetValue !== 'function') {
-    // Throw: the SDK sends a success:false acknowledgement to Gladys.
-    throw new Error(`No command handler for ${device.external_id}`);
-  }
-  await blueprint.onSetValue(gladys, { device, feature, value, config });
+  await bridge.setValue(feature.external_id, value);
 });
 
-// --- Camera: Gladys needs a FRESH image of a camera device -------------------
-// Triggered by the dashboard live view or a chat intent. The resolved
-// `image/jpg;base64,...` string (≤ 150 KB) is acked back to Gladys; the ack is
-// awaited under 15 s (not the usual 5 s), so a real capture fits.
-gladys.onGetImage(async (device) => {
-  logger.info(`onGetImage <- ${device.external_id}`);
-  const blueprint = findBlueprintByDevice(gladys, device);
-  if (!blueprint || typeof blueprint.onGetImage !== 'function') {
-    throw new Error(`No camera handler for ${device.external_id}`);
+// --- Manifest action: "Resynchronize Tydom devices" --------------------------
+gladys.onAction('resync', async () => {
+  if (!bridge.connected) {
+    return {
+      en: 'The MQTT broker is not connected: check the configuration.',
+      fr: "Le broker MQTT n'est pas connecté : vérifiez la configuration.",
+    };
   }
-  return blueprint.onGetImage(gladys, { device, config });
+  await bridge.requestResync();
+  return {
+    en: 'Resynchronization requested: devices will update in a few seconds.',
+    fr: 'Resynchronisation demandée : les appareils seront mis à jour dans quelques secondes.',
+  };
 });
 
-// --- Polling: Gladys asks to refresh a device --------------------------------
-gladys.onPoll(async (device) => {
-  const blueprint = findBlueprintByDevice(gladys, device);
-  if (!blueprint || typeof blueprint.onPoll !== 'function') {
-    logger.debug(`onPoll ignored (no polling) for ${device.external_id}`);
+// --- Connection status, shown in the Configuration screen --------------------
+bridge.on('connected', () => {
+  gladys.setConnectionStatus(true).catch(() => {});
+});
+bridge.on('disconnected', (reason) => {
+  gladys
+    .setConnectionStatus(false, {
+      en: `MQTT broker unreachable (${reason}).`,
+      fr: `Broker MQTT injoignable (${reason}).`,
+    })
+    .catch(() => {});
+});
+
+// --- (Re)apply the configuration ---------------------------------------------
+async function applyConfig() {
+  const missing = missingConfig(config);
+  if (missing) {
+    logger.warn(`Incomplete configuration: ${missing.en}`);
+    bridge.stop();
+    await gladys.setConnectionStatus(false, missing);
     return;
   }
-  await blueprint.onPoll(gladys, config);
-});
-
-// --- Manifest actions: buttons in the Configuration screen -------------------
-// Each action declared in the `actions` field of the manifest is registered
-// per key; the message resolved by the handler is displayed under the button
-// (the ack is awaited under the action's `timeout_seconds`, not the usual 5 s).
-for (const blueprint of DEVICE_BLUEPRINTS) {
-  for (const [actionKey, handler] of Object.entries(blueprint.actions ?? {})) {
-    gladys.onAction(actionKey, (fields) => handler(gladys, { fields, config }));
+  try {
+    await applyContainer(gladys, config);
+  } catch (err) {
+    logger.error('Failed to start tydom2mqtt', err);
+    await gladys.setConnectionStatus(false, {
+      en: 'tydom2mqtt could not be started, check the integration logs.',
+      fr: "tydom2mqtt n'a pas pu être démarré, consultez les logs de l'intégration.",
+    });
+    return;
   }
+  bridge.start(config);
 }
 
-// The `identify` action targets ONE device chosen by the user, so it is not
-// owned by a single blueprint. Its manifest field declares
-// `"source": "devices"` (SDK v0.7+): instead of static `options`, the
-// Configuration screen fills the select with the integration's own created
-// devices, and the handler receives the chosen external_id as a field value.
-gladys.onAction('identify', (fields) => {
-  logger.info(`Action identify <- ${fields.device}`);
-  return identifyDevice(gladys, fields.device, config);
-});
-
-// --- Configuration updated by the user ---------------------------------------
 gladys.onConfigUpdated(async (newConfig) => {
   logger.info('onConfigUpdated -> new configuration received');
   config = normalizeConfig(newConfig);
-  // Re-publish the devices: some properties (unit, frequency) depend on it.
-  // publishDiscoveredDevices is idempotent (upsert by external_id).
-  await gladys.publishDiscoveredDevices(buildDiscoveredDevices(gladys, config));
-  // The reserved GLADYS_PREFER_LOCAL key arrives here like any other key:
-  // re-route the dual-channel devices, then reflect the ACTUAL outcome.
-  await publishDeviceTransports();
+  await applyConfig();
 });
 
 // --- Connection lifecycle ----------------------------------------------------
-// The SDK itself logs the WebSocket lifecycle (connections, disconnections,
-// reconnection attempts) under the `gladys-sdk` name: no need to log it again
-// here, these handlers only run the integration's own (re)initialization.
+// The SDK logs the WebSocket lifecycle itself (under the `gladys-sdk` name).
+let initialized = false;
 gladys.on('connected', async () => {
+  // Reconnection to Gladys: tydom2mqtt and the broker connection are still up.
+  if (initialized) return;
   try {
-    // 1) Fetch the config filled in by the user.
     config = normalizeConfig(await gladys.getConfig());
-
-    // 2) (Re)publish all devices as soon as we are connected.
-    await gladys.publishDiscoveredDevices(buildDiscoveredDevices(gladys, config));
-
-    // 3) Publish the per-device transport badge (cloud/local, dual-channel
-    // devices only). Lightweight channel: on a live switch, call it again
-    // without re-publishing the devices.
-    await publishDeviceTransports();
-
-    // 4) Start the real-time subscriptions ("push" sensors, camera snapshots).
-    stopPushSubscriptions();
-    pushCleanups = DEVICE_BLUEPRINTS.filter((bp) => typeof bp.startPush === 'function').map((bp) =>
-      bp.startPush(gladys, config),
-    );
-
-    // 5) Report the application-level status, shown in the Configuration
-    // screen. Distinct from the container state machine: an integration can
-    // be RUNNING and still disconnected from its third-party service.
-    await gladys.setConnectionStatus(true);
+    await applyConfig();
+    initialized = true;
   } catch (err) {
     logger.error('Post-connection initialization failed', err);
     await gladys
@@ -143,43 +125,16 @@ gladys.on('connected', async () => {
   }
 });
 
-gladys.on('disconnected', () => {
-  stopPushSubscriptions();
-});
-
-// Publish the effective transport of every dual-channel device
-// ('local' | 'cloud' | 'unreachable'), rendered as a badge in the Gladys UI.
-// An entry can also flag a degraded state (`{ degraded: true, message }`,
-// SDK v0.7+): the badge keeps its transport color plus an orange dot, and the
-// tooltip shows the reason — see src/devices/plug.js.
-async function publishDeviceTransports() {
-  const entries = buildTransportEntries(gladys, config);
-  if (entries.length > 0) {
-    await gladys.publishTransports(entries);
-  }
-}
-
-function stopPushSubscriptions() {
-  for (const cleanup of pushCleanups) {
-    try {
-      cleanup?.();
-    } catch (err) {
-      logger.error('Push subscription cleanup failed', err);
-    }
-  }
-  pushCleanups = [];
-}
-
 // --- Graceful shutdown -------------------------------------------------------
-// The SDK stops the push subscriptions, disconnects cleanly and exits with
-// code 0 when the supervisor stops the container (SIGTERM/SIGINT).
+// tydom2mqtt is left running: the supervisor owns the sub-container lifecycle,
+// and it keeps the Tydom states flowing to the broker during a restart.
 gladys.handleShutdown((signal) => {
   logger.info(`Received ${signal} -> graceful shutdown`);
-  stopPushSubscriptions();
+  bridge.stop();
 });
 
 // --- Startup -----------------------------------------------------------------
-logger.info('Starting the template integration...');
+logger.info('Starting the Tydom integration...');
 gladys.connect().catch((err) => {
   logger.error('Initial connection failed', err);
   process.exit(1);

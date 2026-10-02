@@ -1,102 +1,157 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Tydom",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Control your Delta Dore Tydom devices (shutters, lights, gates, thermostats) through tydom2mqtt.",
+    "fr": "Pilotez vos appareils Delta Dore Tydom (volets, lumières, portails, thermostats) via tydom2mqtt."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/quent/gladys-integration-tydom:1.0.0",
   "gladys_version": ">=4.86.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/quent/gladys-integration-tydom/main/cover.png",
+  "categories": ["climate", "lighting", "protocols"],
+  "containers": [
+    {
+      "name": "tydom2mqtt",
+      "docker_image": "ghcr.io/tydom2mqtt/tydom2mqtt:3.6.0",
+      "start": "manual",
+      "read_only": true,
+      "memory_mb": 128,
+      "cpu": 0.5
+    }
+  ],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": { "en": "How it works", "fr": "Fonctionnement" },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "This integration runs tydom2mqtt next to Gladys: it connects to your Tydom gateway and publishes your devices on your MQTT broker. Gladys then reads and controls them through that broker. You need an MQTT broker reachable from Gladys (for instance the one of the Gladys MQTT integration).",
+        "fr": "Cette intégration lance tydom2mqtt à côté de Gladys : il se connecte à votre box Tydom et publie vos appareils sur votre broker MQTT. Gladys les lit et les pilote ensuite via ce broker. Il vous faut un broker MQTT joignable depuis Gladys (par exemple celui de l'intégration MQTT de Gladys)."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/tydom2mqtt/tydom2mqtt",
+          "label": { "en": "tydom2mqtt project", "fr": "Projet tydom2mqtt" }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
+      "key": "tydom_section",
+      "type": "section",
+      "label": { "en": "Tydom gateway", "fr": "Box Tydom" },
       "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+        "en": "The MAC address is printed under the gateway (it starts with 001A25). The password is the one printed under the gateway, or leave it empty and fill in your Delta Dore account so tydom2mqtt retrieves it.",
+        "fr": "L'adresse MAC est inscrite sous la box (elle commence par 001A25). Le mot de passe est celui inscrit sous la box, ou laissez-le vide et renseignez votre compte Delta Dore pour que tydom2mqtt le récupère."
+      }
+    },
+    {
+      "key": "tydom_mac",
+      "type": "string",
+      "label": { "en": "Tydom MAC address", "fr": "Adresse MAC de la Tydom" },
+      "placeholder": { "en": "001A25XXXXXX", "fr": "001A25XXXXXX" },
+      "required": true
+    },
+    {
+      "key": "tydom_password",
+      "type": "secret",
+      "label": { "en": "Tydom password", "fr": "Mot de passe de la Tydom" },
+      "required": false
+    },
+    {
+      "key": "tydom_ip",
+      "type": "string",
+      "label": { "en": "Tydom IP address", "fr": "Adresse IP de la Tydom" },
+      "description": {
+        "en": "Local IP address of the gateway (recommended). Leave mediation.tydom.com to go through the Delta Dore cloud.",
+        "fr": "Adresse IP locale de la box (recommandé). Laissez mediation.tydom.com pour passer par le cloud Delta Dore."
       },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": "mediation.tydom.com"
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
+      "key": "deltadore_login",
+      "type": "string",
+      "label": { "en": "Delta Dore account e-mail", "fr": "E-mail du compte Delta Dore" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "Optional: only needed when the Tydom password is left empty.",
+        "fr": "Facultatif : nécessaire uniquement si le mot de passe Tydom est laissé vide."
       },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "required": false
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
+      "key": "deltadore_password",
+      "type": "secret",
+      "label": { "en": "Delta Dore account password", "fr": "Mot de passe du compte Delta Dore" },
+      "required": false
     },
     {
-      "key": "poll_frequency",
+      "key": "tydom_polling_interval",
       "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds.",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes."
-      },
+      "label": { "en": "Tydom polling interval (s)", "fr": "Intervalle d'interrogation Tydom (s)" },
       "required": false,
       "default": 300,
       "min": 30,
       "max": 3600
+    },
+    {
+      "key": "mqtt_section",
+      "type": "section",
+      "label": { "en": "MQTT broker", "fr": "Broker MQTT" },
+      "description": {
+        "en": "Use the LAN IP address of the broker host: localhost would point inside the containers.",
+        "fr": "Utilisez l'adresse IP locale de la machine du broker : localhost désignerait l'intérieur des conteneurs."
+      }
+    },
+    {
+      "key": "mqtt_host",
+      "type": "string",
+      "label": { "en": "MQTT host", "fr": "Hôte MQTT" },
+      "placeholder": { "en": "192.168.1.10", "fr": "192.168.1.10" },
+      "required": true
+    },
+    {
+      "key": "mqtt_port",
+      "type": "number",
+      "label": { "en": "MQTT port", "fr": "Port MQTT" },
+      "required": false,
+      "default": 1883,
+      "min": 1,
+      "max": 65535
+    },
+    {
+      "key": "mqtt_user",
+      "type": "string",
+      "label": { "en": "MQTT user", "fr": "Utilisateur MQTT" },
+      "required": false
+    },
+    {
+      "key": "mqtt_password",
+      "type": "secret",
+      "label": { "en": "MQTT password", "fr": "Mot de passe MQTT" },
+      "required": false
+    },
+    {
+      "key": "manage_container",
+      "type": "boolean",
+      "label": {
+        "en": "Run tydom2mqtt from Gladys",
+        "fr": "Lancer tydom2mqtt depuis Gladys"
+      },
+      "description": {
+        "en": "Disable it if you already run tydom2mqtt yourself on the same broker: Gladys will only read its topics.",
+        "fr": "Désactivez-le si vous lancez déjà tydom2mqtt vous-même sur le même broker : Gladys se contentera de lire ses topics."
+      },
+      "required": false,
+      "default": true
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "resync",
+      "label": { "en": "Resynchronize Tydom devices", "fr": "Resynchroniser les appareils Tydom" },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ]
 }

@@ -1,27 +1,22 @@
 // -----------------------------------------------------------------------------
 // Minimal in-memory stand-in for the Gladys SDK object, for unit tests.
 //
-// It reproduces the only surface the device modules rely on:
+// It reproduces the only surface the integration relies on:
 //   - externalIds(type, platformId) -> { device, feature(key) }
-//   - publishState / publishStates   -> record calls so tests can assert them
-//   - publishCameraImage             -> record calls so tests can assert them
-//   - publishTransports              -> record calls so tests can assert them
-//   - setConnectionStatus            -> record calls so tests can assert them
-// This lets us test the pure "wiring" logic (discovery payloads, dispatch)
-// without a running Gladys server or a real WebSocket.
+//   - publishState                   -> record calls so tests can assert them
+//   - getContainers / startContainer / stopContainer -> a fake sub-container
+// This lets us test the wiring logic without a running Gladys server.
 // -----------------------------------------------------------------------------
 
-export function createFakeGladys() {
+export function createFakeGladys({ containerStatus = 'stopped' } = {}) {
   const published = [];
-  const cameraImages = [];
-  const transports = [];
-  const connectionStatuses = [];
+  const containerCalls = [];
+  const container = { name: 'tydom2mqtt', status: containerStatus, desired: containerStatus };
 
   return {
     published,
-    cameraImages,
-    transports,
-    connectionStatuses,
+    containerCalls,
+    container,
 
     externalIds(type, platformId) {
       const device = `${type}:${platformId}`;
@@ -35,22 +30,22 @@ export function createFakeGladys() {
       published.push({ featureExternalId, state });
     },
 
-    async publishStates(states) {
-      for (const s of states) {
-        published.push({ featureExternalId: s.device_feature_external_id, state: s.state });
-      }
+    async getContainers() {
+      return [{ ...container, ports: [] }];
     },
 
-    async publishCameraImage(deviceExternalId, image) {
-      cameraImages.push({ deviceExternalId, image });
+    async startContainer(name, options) {
+      containerCalls.push({ action: 'start', name, env: options?.env });
+      container.status = 'running';
+      container.desired = 'running';
+      return { success: true };
     },
 
-    async publishTransports(entries) {
-      transports.push(...entries);
-    },
-
-    async setConnectionStatus(connected, message) {
-      connectionStatuses.push({ connected, message });
+    async stopContainer(name) {
+      containerCalls.push({ action: 'stop', name });
+      container.status = 'stopped';
+      container.desired = 'stopped';
+      return { success: true };
     },
   };
 }
