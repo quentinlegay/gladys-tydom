@@ -7,9 +7,9 @@
     "fr": "Pilotez vos appareils Delta Dore Tydom (volets, lumières, portails, thermostats) via tydom2mqtt."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/quent/gladys-integration-tydom:1.0.0",
+  "docker_image": "ghcr.io/quentinlegay/gladys-tydom-v2:1.0.0",
   "gladys_version": ">=4.86.0",
-  "cover_image": "https://raw.githubusercontent.com/quent/gladys-integration-tydom/main/cover.png",
+  "cover_image": "https://raw.githubusercontent.com/quentinlegay/gladys-tydom-v2/main/cover.png",
   "categories": ["climate", "lighting", "protocols"],
   "containers": [
     {
