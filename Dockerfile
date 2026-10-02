@@ -10,6 +10,10 @@
 
 FROM node:24-alpine
 
+# Link the GHCR package to this repository so the workflow's GITHUB_TOKEN
+# is allowed to push it (fixes `permission_denied: write_package`).
+LABEL org.opencontainers.image.source="https://github.com/quentinlegay/gladys-tydom"
+
 # dumb-init: handles signals (SIGTERM) correctly for a graceful shutdown.
 RUN apk add --no-cache dumb-init
 
