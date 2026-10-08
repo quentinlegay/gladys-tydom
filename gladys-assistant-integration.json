@@ -15,6 +15,10 @@
     "lighting",
     "protocols"
   ],
+  "transports": [
+    "local",
+    "cloud"
+  ],
   "containers": [
     {
       "name": "tydom2mqtt",
