@@ -4,9 +4,23 @@ import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { normalizeConfig } from '../src/config.js';
-import { createFakeGladys } from './helpers/fakeGladys.js';
+import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
 
 let containerModule;
+
+// Not imported: the module must only load once DATA_DIR is set.
+const CONTAINER_NAME = 'tydom2mqtt';
+
+// The SDK fake Gladys serves `fake.containers` and records the start/stop
+// requests: it does not run them, the tests play the supervisor.
+function createGladys(status = 'stopped') {
+  return createFakeGladys({ containers: [{ name: CONTAINER_NAME, status, desired: status }] });
+}
+
+const containerCalls = (gladys) =>
+  gladys.fake.requests
+    .filter((r) => r.method === 'POST' && r.path.startsWith(`/container/${CONTAINER_NAME}/`))
+    .map((r) => ({ action: r.path.split('/').at(-1), env: r.body?.env }));
 
 before(async () => {
   // The module reads DATA_DIR when loaded.
@@ -38,33 +52,34 @@ test('the env mirrors the tydom2mqtt docker-compose variables', () => {
 });
 
 test('the sub-container is started, then left alone while the config is unchanged', async () => {
-  const gladys = createFakeGladys();
+  const gladys = createGladys();
   await containerModule.applyContainer(gladys, config);
   assert.deepEqual(
-    gladys.containerCalls.map((c) => c.action),
+    containerCalls(gladys).map((c) => c.action),
     ['start'],
   );
-  assert.equal(gladys.containerCalls[0].env.TYDOM_IP, '192.168.1.26');
+  assert.equal(containerCalls(gladys)[0].env.TYDOM_IP, '192.168.1.26');
 
+  gladys.fake.containers[0].status = 'running';
   await containerModule.applyContainer(gladys, config);
-  assert.equal(gladys.containerCalls.length, 1, 'no restart for the same configuration');
+  assert.equal(containerCalls(gladys).length, 1, 'no restart for the same configuration');
 });
 
 test('a configuration change recreates the sub-container with the new env', async () => {
-  const gladys = createFakeGladys({ containerStatus: 'running' });
+  const gladys = createGladys('running');
   await containerModule.applyContainer(gladys, { ...config, tydom_ip: '192.168.1.27' });
   assert.deepEqual(
-    gladys.containerCalls.map((c) => c.action),
+    containerCalls(gladys).map((c) => c.action),
     ['stop', 'start'],
   );
-  assert.equal(gladys.containerCalls[1].env.TYDOM_IP, '192.168.1.27');
+  assert.equal(containerCalls(gladys)[1].env.TYDOM_IP, '192.168.1.27');
 });
 
 test('the sub-container is stopped when tydom2mqtt is managed outside Gladys', async () => {
-  const gladys = createFakeGladys({ containerStatus: 'running' });
+  const gladys = createGladys('running');
   await containerModule.applyContainer(gladys, { ...config, manage_container: false });
   assert.deepEqual(
-    gladys.containerCalls.map((c) => c.action),
+    containerCalls(gladys).map((c) => c.action),
     ['stop'],
   );
 });
