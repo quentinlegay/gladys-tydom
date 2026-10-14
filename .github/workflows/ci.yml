@@ -5,7 +5,9 @@
 # keep:
 #   1. Prettier  -> consistent formatting (no style debates in reviews);
 #   2. ESLint    -> catch real mistakes (undefined vars, dead code, ...);
-#   3. Tests     -> `node --test`, the built-in runner (no extra dependency).
+#   3. Tests     -> `node --test`, the built-in runner (no extra dependency);
+#   4. Store     -> the store indexer's own admission checks on the manifest
+#      (a manifest it rejects silently stops updates from reaching users).
 #
 # Runs on Node 24, the version the Docker image ships with (see the Dockerfile),
 # so the check exercises the exact runtime the integration runs on.
@@ -43,3 +45,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      # Same validation as the hourly store indexer. The image check is skipped:
+      # a release bump references an image tag that is not pushed yet.
+      - name: Validate the manifest against the store rules
+        run: npx --yes github:GladysAssistant/integration-store --skip-image-check

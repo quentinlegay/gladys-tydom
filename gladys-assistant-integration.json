@@ -6,7 +6,7 @@
     "en": "Control your Delta Dore Tydom devices (shutters, lights, gates, thermostats) through tydom2mqtt.",
     "fr": "Pilotez vos appareils Delta Dore Tydom (volets, lumières, portails, thermostats) via tydom2mqtt.",
     "de": "Steuern Sie Ihre Delta Dore Tydom-Geräte (Rollläden, Lichter, Tore, Thermostate) über tydom2mqtt.",
-    "es": "Controla tus dispositivos Delta Dore Tydom (persianas, luces, portones, termostatos) mediante tydom2mqtt."
+    "es": "Controla tus equipos Delta Dore Tydom (persianas, luces, portones, termostatos) con tydom2mqtt."
   },
   "version": "2.0.3",
   "docker_image": "ghcr.io/quentinlegay/gladys-tydom:2.0.3",
