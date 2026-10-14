@@ -54,12 +54,16 @@ gladys.onAction('resync', async () => {
     return {
       en: 'The MQTT broker is not connected: check the configuration.',
       fr: "Le broker MQTT n'est pas connecté : vérifiez la configuration.",
+      de: 'Der MQTT-Broker ist nicht verbunden: Überprüfen Sie die Konfiguration.',
+      es: 'El broker MQTT no está conectado: revisa la configuración.',
     };
   }
   await bridge.requestResync();
   return {
     en: 'Resynchronization requested: devices will update in a few seconds.',
     fr: 'Resynchronisation demandée : les appareils seront mis à jour dans quelques secondes.',
+    de: 'Neusynchronisierung angefordert: Die Geräte werden in einigen Sekunden aktualisiert.',
+    es: 'Resincronización solicitada: los dispositivos se actualizarán en unos segundos.',
   };
 });
 
@@ -72,6 +76,8 @@ bridge.on('disconnected', (reason) => {
     .setConnectionStatus(false, {
       en: `MQTT broker unreachable (${reason}).`,
       fr: `Broker MQTT injoignable (${reason}).`,
+      de: `MQTT-Broker nicht erreichbar (${reason}).`,
+      es: `Broker MQTT inaccesible (${reason}).`,
     })
     .catch(() => {});
 });
@@ -92,6 +98,8 @@ async function applyConfig() {
     await gladys.setConnectionStatus(false, {
       en: 'tydom2mqtt could not be started, check the integration logs.',
       fr: "tydom2mqtt n'a pas pu être démarré, consultez les logs de l'intégration.",
+      de: 'tydom2mqtt konnte nicht gestartet werden, prüfen Sie die Logs der Integration.',
+      es: 'No se pudo iniciar tydom2mqtt, consulta los registros de la integración.',
     });
     return;
   }
@@ -120,6 +128,8 @@ gladys.on('connected', async () => {
       .setConnectionStatus(false, {
         en: 'Initialization failed, check the integration logs.',
         fr: "L'initialisation a échoué, consultez les logs de l'intégration.",
+        de: 'Die Initialisierung ist fehlgeschlagen, prüfen Sie die Logs der Integration.',
+        es: 'La inicialización ha fallado, consulta los registros de la integración.',
       })
       .catch(() => {});
   }

@@ -4,7 +4,9 @@
   "name": "Tydom",
   "description": {
     "en": "Control your Delta Dore Tydom devices (shutters, lights, gates, thermostats) through tydom2mqtt.",
-    "fr": "Pilotez vos appareils Delta Dore Tydom (volets, lumières, portails, thermostats) via tydom2mqtt."
+    "fr": "Pilotez vos appareils Delta Dore Tydom (volets, lumières, portails, thermostats) via tydom2mqtt.",
+    "de": "Steuern Sie Ihre Delta Dore Tydom-Geräte (Rollläden, Lichter, Tore, Thermostate) über tydom2mqtt.",
+    "es": "Controla tus dispositivos Delta Dore Tydom (persianas, luces, portones, termostatos) mediante tydom2mqtt."
   },
   "version": "2.0.2",
   "docker_image": "ghcr.io/quentinlegay/gladys-tydom:2.0.2",
@@ -35,18 +37,24 @@
       "type": "section",
       "label": {
         "en": "How it works",
-        "fr": "Fonctionnement"
+        "fr": "Fonctionnement",
+        "de": "Funktionsweise",
+        "es": "Funcionamiento"
       },
       "description": {
         "en": "This integration runs tydom2mqtt next to Gladys: it connects to your Tydom gateway and publishes your devices on your MQTT broker. Gladys then reads and controls them through that broker. You need an MQTT broker reachable from Gladys (for instance the one of the Gladys MQTT integration).",
-        "fr": "Cette intégration lance tydom2mqtt à côté de Gladys : il se connecte à votre box Tydom et publie vos appareils sur votre broker MQTT. Gladys les lit et les pilote ensuite via ce broker. Il vous faut un broker MQTT joignable depuis Gladys (par exemple celui de l'intégration MQTT de Gladys)."
+        "fr": "Cette intégration lance tydom2mqtt à côté de Gladys : il se connecte à votre box Tydom et publie vos appareils sur votre broker MQTT. Gladys les lit et les pilote ensuite via ce broker. Il vous faut un broker MQTT joignable depuis Gladys (par exemple celui de l'intégration MQTT de Gladys).",
+        "de": "Diese Integration startet tydom2mqtt neben Gladys: Es verbindet sich mit Ihrem Tydom-Gateway und veröffentlicht Ihre Geräte auf Ihrem MQTT-Broker. Gladys liest und steuert sie dann über diesen Broker. Sie benötigen einen von Gladys erreichbaren MQTT-Broker (zum Beispiel den der MQTT-Integration von Gladys).",
+        "es": "Esta integración ejecuta tydom2mqtt junto a Gladys: se conecta a tu pasarela Tydom y publica tus dispositivos en tu broker MQTT. Gladys los lee y los controla a través de ese broker. Necesitas un broker MQTT accesible desde Gladys (por ejemplo, el de la integración MQTT de Gladys)."
       },
       "links": [
         {
           "url": "https://github.com/tydom2mqtt/tydom2mqtt",
           "label": {
             "en": "tydom2mqtt project",
-            "fr": "Projet tydom2mqtt"
+            "fr": "Projet tydom2mqtt",
+            "de": "tydom2mqtt-Projekt",
+            "es": "Proyecto tydom2mqtt"
           }
         }
       ]
@@ -56,11 +64,15 @@
       "type": "section",
       "label": {
         "en": "Tydom gateway",
-        "fr": "Box Tydom"
+        "fr": "Box Tydom",
+        "de": "Tydom-Gateway",
+        "es": "Pasarela Tydom"
       },
       "description": {
         "en": "The MAC address is printed under the gateway (it starts with 001A25). The password is the one printed under the gateway, or leave it empty and fill in your Delta Dore account so tydom2mqtt retrieves it.",
-        "fr": "L'adresse MAC est inscrite sous la box (elle commence par 001A25). Le mot de passe est celui inscrit sous la box, ou laissez-le vide et renseignez votre compte Delta Dore pour que tydom2mqtt le récupère."
+        "fr": "L'adresse MAC est inscrite sous la box (elle commence par 001A25). Le mot de passe est celui inscrit sous la box, ou laissez-le vide et renseignez votre compte Delta Dore pour que tydom2mqtt le récupère.",
+        "de": "Die MAC-Adresse steht auf der Unterseite des Gateways (sie beginnt mit 001A25). Das Passwort ist das auf der Unterseite des Gateways aufgedruckte. Sie können es auch leer lassen und Ihr Delta Dore-Konto angeben, damit tydom2mqtt es abruft.",
+        "es": "La dirección MAC está impresa debajo de la pasarela (empieza por 001A25). La contraseña es la impresa debajo de la pasarela; también puedes dejarla vacía e indicar tu cuenta Delta Dore para que tydom2mqtt la obtenga."
       }
     },
     {
@@ -68,11 +80,15 @@
       "type": "string",
       "label": {
         "en": "Tydom MAC address",
-        "fr": "Adresse MAC de la Tydom"
+        "fr": "Adresse MAC de la Tydom",
+        "de": "MAC-Adresse der Tydom",
+        "es": "Dirección MAC de la Tydom"
       },
       "placeholder": {
         "en": "001A25XXXXXX",
-        "fr": "001A25XXXXXX"
+        "fr": "001A25XXXXXX",
+        "de": "001A25XXXXXX",
+        "es": "001A25XXXXXX"
       },
       "required": true
     },
@@ -81,7 +97,9 @@
       "type": "secret",
       "label": {
         "en": "Tydom password",
-        "fr": "Mot de passe de la Tydom"
+        "fr": "Mot de passe de la Tydom",
+        "de": "Tydom-Passwort",
+        "es": "Contraseña de la Tydom"
       },
       "required": false
     },
@@ -90,11 +108,15 @@
       "type": "string",
       "label": {
         "en": "Tydom IP address",
-        "fr": "Adresse IP de la Tydom"
+        "fr": "Adresse IP de la Tydom",
+        "de": "IP-Adresse der Tydom",
+        "es": "Dirección IP de la Tydom"
       },
       "description": {
         "en": "Local IP address of the gateway (recommended). Leave mediation.tydom.com to go through the Delta Dore cloud.",
-        "fr": "Adresse IP locale de la box (recommandé). Laissez mediation.tydom.com pour passer par le cloud Delta Dore."
+        "fr": "Adresse IP locale de la box (recommandé). Laissez mediation.tydom.com pour passer par le cloud Delta Dore.",
+        "de": "Lokale IP-Adresse des Gateways (empfohlen). Lassen Sie mediation.tydom.com stehen, um über die Delta Dore-Cloud zu gehen.",
+        "es": "Dirección IP local de la pasarela (recomendado). Deja mediation.tydom.com para pasar por la nube de Delta Dore."
       },
       "required": true,
       "default": "mediation.tydom.com"
@@ -104,11 +126,15 @@
       "type": "string",
       "label": {
         "en": "Delta Dore account e-mail",
-        "fr": "E-mail du compte Delta Dore"
+        "fr": "E-mail du compte Delta Dore",
+        "de": "E-Mail des Delta Dore-Kontos",
+        "es": "Correo de la cuenta Delta Dore"
       },
       "description": {
         "en": "Optional: only needed when the Tydom password is left empty.",
-        "fr": "Facultatif : nécessaire uniquement si le mot de passe Tydom est laissé vide."
+        "fr": "Facultatif : nécessaire uniquement si le mot de passe Tydom est laissé vide.",
+        "de": "Optional: nur erforderlich, wenn das Tydom-Passwort leer bleibt.",
+        "es": "Opcional: solo es necesario si la contraseña de la Tydom se deja vacía."
       },
       "required": false
     },
@@ -117,7 +143,9 @@
       "type": "secret",
       "label": {
         "en": "Delta Dore account password",
-        "fr": "Mot de passe du compte Delta Dore"
+        "fr": "Mot de passe du compte Delta Dore",
+        "de": "Passwort des Delta Dore-Kontos",
+        "es": "Contraseña de la cuenta Delta Dore"
       },
       "required": false
     },
@@ -126,7 +154,9 @@
       "type": "number",
       "label": {
         "en": "Tydom polling interval (s)",
-        "fr": "Intervalle d'interrogation Tydom (s)"
+        "fr": "Intervalle d'interrogation Tydom (s)",
+        "de": "Tydom-Abfrageintervall (s)",
+        "es": "Intervalo de consulta de la Tydom (s)"
       },
       "required": false,
       "default": 300,
@@ -138,11 +168,15 @@
       "type": "section",
       "label": {
         "en": "MQTT broker",
-        "fr": "Broker MQTT"
+        "fr": "Broker MQTT",
+        "de": "MQTT-Broker",
+        "es": "Broker MQTT"
       },
       "description": {
         "en": "Use the LAN IP address of the broker host: localhost would point inside the containers.",
-        "fr": "Utilisez l'adresse IP locale de la machine du broker : localhost désignerait l'intérieur des conteneurs."
+        "fr": "Utilisez l'adresse IP locale de la machine du broker : localhost désignerait l'intérieur des conteneurs.",
+        "de": "Verwenden Sie die lokale IP-Adresse des Broker-Rechners: localhost würde auf das Innere der Container zeigen.",
+        "es": "Usa la dirección IP local de la máquina del broker: localhost apuntaría al interior de los contenedores."
       }
     },
     {
@@ -150,11 +184,15 @@
       "type": "string",
       "label": {
         "en": "MQTT host",
-        "fr": "Hôte MQTT"
+        "fr": "Hôte MQTT",
+        "de": "MQTT-Host",
+        "es": "Host MQTT"
       },
       "placeholder": {
         "en": "192.168.1.10",
-        "fr": "192.168.1.10"
+        "fr": "192.168.1.10",
+        "de": "192.168.1.10",
+        "es": "192.168.1.10"
       },
       "required": true
     },
@@ -163,7 +201,9 @@
       "type": "number",
       "label": {
         "en": "MQTT port",
-        "fr": "Port MQTT"
+        "fr": "Port MQTT",
+        "de": "MQTT-Port",
+        "es": "Puerto MQTT"
       },
       "required": false,
       "default": 1883,
@@ -175,7 +215,9 @@
       "type": "string",
       "label": {
         "en": "MQTT user",
-        "fr": "Utilisateur MQTT"
+        "fr": "Utilisateur MQTT",
+        "de": "MQTT-Benutzer",
+        "es": "Usuario MQTT"
       },
       "required": false
     },
@@ -184,7 +226,9 @@
       "type": "secret",
       "label": {
         "en": "MQTT password",
-        "fr": "Mot de passe MQTT"
+        "fr": "Mot de passe MQTT",
+        "de": "MQTT-Passwort",
+        "es": "Contraseña MQTT"
       },
       "required": false
     },
@@ -193,11 +237,15 @@
       "type": "boolean",
       "label": {
         "en": "Run tydom2mqtt from Gladys",
-        "fr": "Lancer tydom2mqtt depuis Gladys"
+        "fr": "Lancer tydom2mqtt depuis Gladys",
+        "de": "tydom2mqtt über Gladys starten",
+        "es": "Ejecutar tydom2mqtt desde Gladys"
       },
       "description": {
         "en": "Disable it if you already run tydom2mqtt yourself on the same broker: Gladys will only read its topics.",
-        "fr": "Désactivez-le si vous lancez déjà tydom2mqtt vous-même sur le même broker : Gladys se contentera de lire ses topics."
+        "fr": "Désactivez-le si vous lancez déjà tydom2mqtt vous-même sur le même broker : Gladys se contentera de lire ses topics.",
+        "de": "Deaktivieren Sie diese Option, wenn Sie tydom2mqtt bereits selbst auf demselben Broker betreiben: Gladys liest dann nur dessen Topics.",
+        "es": "Desactívalo si ya ejecutas tydom2mqtt por tu cuenta en el mismo broker: Gladys solo leerá sus topics."
       },
       "required": false,
       "default": true
@@ -208,7 +256,9 @@
       "key": "resync",
       "label": {
         "en": "Resynchronize Tydom devices",
-        "fr": "Resynchroniser les appareils Tydom"
+        "fr": "Resynchroniser les appareils Tydom",
+        "de": "Tydom-Geräte neu synchronisieren",
+        "es": "Resincronizar los dispositivos Tydom"
       },
       "timeout_seconds": 30
     }

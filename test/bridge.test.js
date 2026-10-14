@@ -4,7 +4,7 @@ import { EventEmitter } from 'node:events';
 import { TydomBridge } from '../src/tydom/bridge.js';
 import { normalizeConfig } from '../src/config.js';
 import { RESYNC_TOPIC } from '../src/tydom/mapping.js';
-import { createFakeGladys } from './helpers/fakeGladys.js';
+import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
 import { COVER_ID, coverBatteryConfig, coverConfig, lightConfig } from './fixtures/discovery.js';
 
 // In-memory MQTT client: records publications and lets the test push messages.
@@ -59,7 +59,7 @@ test('connects to the configured broker with the credentials', () => {
 });
 
 test('discovery messages become one Gladys device per Tydom endpoint', async () => {
-  const { client, bridge } = setup();
+  const { client, gladys, bridge } = setup();
   const announced = new Promise((resolve) => bridge.once('devices', resolve));
   client.receive(coverConfig.topic, coverConfig.payload);
   client.receive(coverBatteryConfig.topic, coverBatteryConfig.payload);
@@ -67,7 +67,9 @@ test('discovery messages become one Gladys device per Tydom endpoint', async () 
   const devices = await announced;
 
   assert.equal(devices.length, 2);
-  const cover = devices.find((d) => d.external_id === `endpoint:${COVER_ID}`);
+  const cover = devices.find(
+    (d) => d.external_id === gladys.externalIds('endpoint', COVER_ID).device,
+  );
   assert.equal(cover.name, 'Volet salon');
   assert.equal(cover.features.length, 3, 'state + position + battery');
   bridge.stop();
@@ -81,9 +83,11 @@ test('states are forwarded to Gladys, including those received before the discov
   client.receive(coverConfig.payload.position_topic, '75');
   await flush();
 
-  const positions = gladys.published.filter((p) => p.featureExternalId.endsWith('-position'));
+  const positions = gladys.fake.states.filter((s) =>
+    s.device_feature_external_id.endsWith('-position'),
+  );
   assert.deepEqual(
-    positions.map((p) => p.state),
+    positions.map((s) => s.state),
     [30, 75],
   );
   bridge.stop();
@@ -105,7 +109,7 @@ test('Gladys commands are published on the tydom2mqtt command topics', async () 
     { topic: coverConfig.payload.set_position_topic, payload: '40' },
   ]);
   // No state topic for open/close/stop: the order itself is reflected.
-  assert.deepEqual(gladys.published.at(-1), { featureExternalId: state.external_id, state: -1 });
+  assert.equal(gladys.fake.lastState(state.external_id), -1);
   bridge.stop();
 });
 
