@@ -8,7 +8,7 @@ Built from the official
 [integration template](https://github.com/GladysAssistant/integration-template-js)
 with the [`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js).
 
-User documentation: [docs/en.md](./docs/en.md) · [docs/fr.md](./docs/fr.md).
+User documentation: [docs/en.md](./docs/en.md) · [docs/fr.md](./docs/fr.md) · [docs/de.md](./docs/de.md) · [docs/es.md](./docs/es.md).
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 │     ├─ catalog.js                  # entities -> Gladys devices, state/command routing
 │     └─ bridge.js                   # MQTT client (discovery, states, commands)
 ├─ test/                             # node --test unit tests
-├─ docs/{en,fr}.md                   # user documentation, re-hosted by Gladys
+├─ docs/{en,fr,de,es}.md             # user documentation, re-hosted by Gladys
 ├─ gladys-assistant-integration.json # manifest (config schema, sub-container…)
 └─ Dockerfile
 ```

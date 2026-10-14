@@ -67,6 +67,8 @@ export function missingConfig(config) {
     return {
       en: 'Fill in the MQTT broker host.',
       fr: "Renseignez l'hôte du broker MQTT.",
+      de: 'Geben Sie den Host des MQTT-Brokers an.',
+      es: 'Indica el host del broker MQTT.',
     };
   }
   if (!config.manage_container) {
@@ -76,12 +78,16 @@ export function missingConfig(config) {
     return {
       en: 'Fill in the MAC address of the Tydom gateway.',
       fr: "Renseignez l'adresse MAC de la box Tydom.",
+      de: 'Geben Sie die MAC-Adresse des Tydom-Gateways an.',
+      es: 'Indica la dirección MAC de la pasarela Tydom.',
     };
   }
   if (!config.tydom_password && !(config.deltadore_login && config.deltadore_password)) {
     return {
       en: 'Fill in the Tydom password, or your Delta Dore account.',
       fr: 'Renseignez le mot de passe Tydom, ou votre compte Delta Dore.',
+      de: 'Geben Sie das Tydom-Passwort oder Ihr Delta Dore-Konto an.',
+      es: 'Indica la contraseña de la Tydom o tu cuenta Delta Dore.',
     };
   }
   return null;
