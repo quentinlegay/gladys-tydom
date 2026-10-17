@@ -19,6 +19,7 @@ import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { missingConfig, normalizeConfig } from './src/config.js';
 import { applyContainer } from './src/container.js';
 import { TydomBridge } from './src/tydom/bridge.js';
+import { registerWidgets } from './src/widgets.js';
 
 const gladys = new GladysIntegration();
 const bridge = new TydomBridge(gladys);
@@ -66,6 +67,9 @@ gladys.onAction('resync', async () => {
     es: 'Resincronización solicitada: los dispositivos se actualizarán en unos segundos.',
   };
 });
+
+// --- Dashboard widgets (manifest `widgets`) ----------------------------------
+const widgets = registerWidgets(gladys, bridge);
 
 // --- Connection status, shown in the Configuration screen --------------------
 bridge.on('connected', () => {
@@ -140,6 +144,7 @@ gladys.on('connected', async () => {
 // and it keeps the Tydom states flowing to the broker during a restart.
 gladys.handleShutdown((signal) => {
   logger.info(`Received ${signal} -> graceful shutdown`);
+  widgets.stop();
   bridge.stop();
 });
 

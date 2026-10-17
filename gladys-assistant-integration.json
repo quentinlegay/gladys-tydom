@@ -10,7 +10,7 @@
   },
   "version": "2.0.4",
   "docker_image": "ghcr.io/quentinlegay/gladys-tydom:2.0.4",
-  "gladys_version": ">=4.86.0",
+  "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/quentinlegay/gladys-tydom/main/cover.png",
   "categories": [
     "climate",
@@ -249,6 +249,98 @@
       },
       "required": false,
       "default": true
+    }
+  ],
+  "widgets": [
+    {
+      "key": "tydom_device",
+      "label": {
+        "en": "Tydom device",
+        "fr": "Appareil Tydom",
+        "de": "Tydom-Gerät",
+        "es": "Dispositivo Tydom"
+      },
+      "description": {
+        "en": "Live values, controls and history of one Tydom device.",
+        "fr": "Valeurs en direct, commandes et historique d'un appareil Tydom.",
+        "de": "Live-Werte, Steuerung und Verlauf eines Tydom-Geräts.",
+        "es": "Valores en directo, mandos e historial de un dispositivo Tydom."
+      },
+      "icon": "home",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "shutters",
+      "label": {
+        "en": "Tydom shutters",
+        "fr": "Volets Tydom",
+        "de": "Tydom-Rollläden",
+        "es": "Persianas Tydom"
+      },
+      "description": {
+        "en": "Position of every shutter, open or close them all at once.",
+        "fr": "Position de chaque volet, tout ouvrir ou tout fermer d'un geste.",
+        "de": "Position jedes Rollladens, alle auf einmal öffnen oder schließen.",
+        "es": "Posición de cada persiana, abrirlas o cerrarlas todas a la vez."
+      },
+      "icon": "sun",
+      "settings": [
+        {
+          "key": "devices",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Shutters (all if empty)",
+            "fr": "Volets (tous si vide)",
+            "de": "Rollläden (alle wenn leer)",
+            "es": "Persianas (todas si vacío)"
+          },
+          "required": false
+        }
+      ]
+    },
+    {
+      "key": "batteries",
+      "label": {
+        "en": "Tydom batteries",
+        "fr": "Piles Tydom",
+        "de": "Tydom-Batterien",
+        "es": "Pilas Tydom"
+      },
+      "description": {
+        "en": "Battery level of every Tydom device, the weakest first.",
+        "fr": "Niveau de pile de chaque appareil Tydom, les plus faibles en premier.",
+        "de": "Batteriestand jedes Tydom-Geräts, die schwächsten zuerst.",
+        "es": "Nivel de pila de cada dispositivo Tydom, las más bajas primero."
+      },
+      "icon": "battery",
+      "settings": [
+        {
+          "key": "only_low",
+          "type": "boolean",
+          "label": {
+            "en": "Only low batteries",
+            "fr": "Seulement les piles faibles",
+            "de": "Nur schwache Batterien",
+            "es": "Solo pilas bajas"
+          },
+          "required": false,
+          "default": false
+        }
+      ]
     }
   ],
   "actions": [

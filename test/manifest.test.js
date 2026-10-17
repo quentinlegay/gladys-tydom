@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG, normalizeConfig } from '../src/config.js';
 import { CONTAINER_NAME, buildContainerEnv } from '../src/container.js';
+import { WIDGET_KEYS } from '../src/widgets.js';
 
 const manifest = JSON.parse(
   await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
@@ -21,6 +22,23 @@ test('every manifest action has a registered handler', () => {
   const handled = new Set(HANDLED_ACTIONS);
   for (const action of manifest.actions ?? []) {
     assert.ok(handled.has(action.key), `manifest action "${action.key}" has no handler`);
+  }
+});
+
+test('every manifest widget has its handlers, and the core knows widgets', () => {
+  const declared = (manifest.widgets ?? []).map((w) => w.key).sort();
+  assert.deepEqual(declared, Object.values(WIDGET_KEYS).sort());
+  // Dashboard widgets of external integrations ship with Gladys 5.1.0: older
+  // cores reject the unknown `widgets` manifest field.
+  const [, major, minor] = manifest.gladys_version.match(/>=\s*(\d+)\.(\d+)\.\d+/).map(Number);
+  assert.ok(major > 5 || (major === 5 && minor >= 1), 'widgets require gladys_version >= 5.1.0');
+  for (const widget of manifest.widgets) {
+    for (const label of Object.values(widget.label)) {
+      assert.ok(label.length >= 3 && label.length <= 30, `widget label "${label}" is 3-30 chars`);
+    }
+    for (const field of widget.settings ?? []) {
+      assert.ok(['string', 'number', 'boolean', 'select', 'multi_select'].includes(field.type));
+    }
   }
 });
 

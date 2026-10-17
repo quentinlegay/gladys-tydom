@@ -61,6 +61,24 @@ Not supported yet: alarm, heating modes and presets, shutter tilt.
   configuration and republish every device. Use it after adding a device to
   your Tydom installation.
 
+## Dashboard widgets
+
+Requires Gladys 5.1.0 or later. In **Dashboard → Edit → Add a widget**, pick
+one of the Tydom widgets. They only show the Tydom devices added in Gladys,
+under the name you gave them.
+
+- **Tydom device** — one device of your choice: its values live (position,
+  brightness, setpoint, temperature, power, battery…), a 24-hour history chart
+  and its controls (open / stop / close a shutter, turn a light or a gate
+  on or off, setpoint ±0.5 °C on a thermostat).
+- **Tydom shutters** — the position of every shutter, how many are open or
+  closed, and **Open all** / **Stop all** / **Close all** buttons (closing
+  asks for a confirmation). Optionally restrict it to a few shutters.
+- **Tydom batteries** — the battery level of every Tydom sensor, the weakest
+  first: red at 15 % or less (or when the device reports a battery fault),
+  orange at 30 % or less. The **Only low batteries** setting hides the
+  healthy ones.
+
 ## Troubleshooting
 
 - **No device in Discovery**: check the tydom2mqtt sub-container logs in the

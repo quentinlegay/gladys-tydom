@@ -66,6 +66,26 @@ inclinaison des lames.
   la configuration Tydom et de republier tous les appareils. À utiliser après
   avoir ajouté un appareil à votre installation Tydom.
 
+## Widgets du tableau de bord
+
+Nécessite Gladys 5.1.0 ou plus récent. Dans **Tableau de bord → Modifier →
+Ajouter un widget**, choisissez l'un des widgets Tydom. Ils n'affichent que les
+appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez donné.
+
+- **Appareil Tydom** — un appareil au choix : ses valeurs en direct
+  (position, luminosité, consigne, température, puissance, pile…), un
+  graphique de l'historique sur 24 h et ses commandes (ouvrir / stop / fermer
+  un volet, allumer ou éteindre une lumière ou un portail, consigne ±0,5 °C
+  sur un thermostat).
+- **Volets Tydom** — la position de chaque volet, le nombre de volets ouverts
+  ou fermés, et les boutons **Tout ouvrir** / **Tout arrêter** / **Tout
+  fermer** (la fermeture demande une confirmation). Vous pouvez le limiter à
+  quelques volets.
+- **Piles Tydom** — le niveau de pile de chaque capteur Tydom, les plus
+  faibles en premier : en rouge à 15 % ou moins (ou si l'appareil signale un
+  défaut de pile), en orange à 30 % ou moins. Le réglage **Seulement les piles
+  faibles** masque celles en bon état.
+
 ## Dépannage
 
 - **Aucun appareil dans Découverte** : consultez les logs du sous-conteneur

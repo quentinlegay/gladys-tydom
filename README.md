@@ -34,15 +34,22 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 - **States and commands go through the broker.** State messages are forwarded
   with `publishState`; Gladys commands are published on the command topics
   announced by the discovery.
+- **Dashboard widgets** (manifest `widgets`, Gladys >= 5.1.0): `tydom_device`
+  binds its tiles, chart and buttons to the features of one device (live, no
+  refresh needed); `shutters` and `batteries` list the devices created in
+  Gladys with the last values received, and are nudged with
+  `requestWidgetRefresh` (throttled under the core's 1 per 10 s limit) when a
+  shutter position or a battery changes.
 
 ## Project structure
 
 ```
 .
-├─ index.js                          # SDK wiring (scan, setValue, config, actions)
+├─ index.js                          # SDK wiring (scan, setValue, config, actions, widgets)
 ├─ src/
 │  ├─ config.js                      # config defaults, normalization, validation
 │  ├─ container.js                   # tydom2mqtt sub-container lifecycle
+│  ├─ widgets.js                     # dashboard widgets (device, shutters, batteries)
 │  └─ tydom/
 │     ├─ mapping.js                  # HA discovery entity -> Gladys features (pure)
 │     ├─ catalog.js                  # entities -> Gladys devices, state/command routing
