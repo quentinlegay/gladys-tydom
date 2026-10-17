@@ -25,6 +25,7 @@ const DEVICES_DEBOUNCE_MS = 3000;
  *   - 'connected'          the broker connection is up
  *   - 'disconnected'       (message) the broker connection is down
  *   - 'devices'            (devices) the Gladys device list changed
+ *   - 'state'              (feature, value) a feature got a new value
  */
 export class TydomBridge extends EventEmitter {
   /**
@@ -41,6 +42,8 @@ export class TydomBridge extends EventEmitter {
     this.catalog = new Catalog(gladys);
     /** @type {Map<string, string>} last payload received per state topic */
     this.lastStates = new Map();
+    /** @type {Map<string, number>} last value per feature external id */
+    this.values = new Map();
     this.client = null;
     this.devicesTimer = null;
   }
@@ -95,6 +98,7 @@ export class TydomBridge extends EventEmitter {
     }
     this.catalog.clear();
     this.lastStates.clear();
+    this.values.clear();
   }
 
   async handleMessage(topic, payload) {
@@ -122,6 +126,7 @@ export class TydomBridge extends EventEmitter {
     for (const feature of this.catalog.featuresForStateTopic(topic)) {
       const value = feature.parse(payload);
       if (value === null) continue;
+      this.recordValue(feature, value);
       try {
         await this.gladys.publishState(feature.externalId, value);
       } catch (err) {
@@ -129,6 +134,18 @@ export class TydomBridge extends EventEmitter {
         logger.debug(`publishState ${feature.externalId} refused: ${err.message}`);
       }
     }
+  }
+
+  /** Keep the last value of a feature, for the dashboard widgets. */
+  recordValue(feature, value) {
+    if (this.values.get(feature.externalId) === value) return;
+    this.values.set(feature.externalId, value);
+    this.emit('state', feature, value);
+  }
+
+  /** Last value received for a feature, `undefined` when none yet. */
+  valueOf(featureExternalId) {
+    return this.values.get(featureExternalId);
   }
 
   scheduleDevicesUpdate() {
@@ -163,6 +180,7 @@ export class TydomBridge extends EventEmitter {
 
     // No state topic (e.g. shutter open/close/stop): reflect the order itself.
     if (!feature.stateTopic) {
+      this.recordValue(feature, value);
       await this.gladys.publishState(featureExternalId, value);
     }
   }

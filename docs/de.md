@@ -66,6 +66,26 @@ Lamellenneigung.
   Nutzen Sie dies, nachdem Sie Ihrer Tydom-Installation ein Gerät hinzugefügt
   haben.
 
+## Dashboard-Widgets
+
+Erfordert Gladys 5.1.0 oder neuer. Wählen Sie unter **Dashboard → Bearbeiten
+→ Widget hinzufügen** eines der Tydom-Widgets. Sie zeigen nur die in Gladys
+hinzugefügten Tydom-Geräte, unter dem Namen, den Sie ihnen gegeben haben.
+
+- **Tydom-Gerät** — ein Gerät Ihrer Wahl: seine Live-Werte (Position,
+  Helligkeit, Sollwert, Temperatur, Leistung, Batterie…), ein 24-Stunden-
+  Verlaufsdiagramm und seine Steuerung (Rollladen öffnen / stoppen /
+  schließen, Licht oder Tor ein- und ausschalten, Sollwert ±0,5 °C an einem
+  Thermostat).
+- **Tydom-Rollläden** — die Position jedes Rollladens, wie viele offen oder
+  geschlossen sind, und die Schaltflächen **Alle öffnen** / **Alle stoppen** /
+  **Alle schließen** (das Schließen fragt nach einer Bestätigung). Kann auf
+  einige Rollläden beschränkt werden.
+- **Tydom-Batterien** — der Batteriestand jedes Tydom-Sensors, die
+  schwächsten zuerst: rot bei 15 % oder weniger (oder wenn das Gerät einen
+  Batteriefehler meldet), orange bei 30 % oder weniger. Die Einstellung **Nur
+  schwache Batterien** blendet die guten aus.
+
 ## Fehlerbehebung
 
 - **Kein Gerät in der Erkennung**: Prüfen Sie die Logs des Sub-Containers

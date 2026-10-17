@@ -65,6 +65,24 @@ las lamas.
   configuración Tydom y vuelva a publicar todos los dispositivos. Úsala después
   de añadir un dispositivo a tu instalación Tydom.
 
+## Widgets del panel
+
+Requiere Gladys 5.1.0 o posterior. En **Panel → Editar → Añadir un widget**,
+elige uno de los widgets Tydom. Solo muestran los dispositivos Tydom añadidos
+en Gladys, con el nombre que les diste.
+
+- **Dispositivo Tydom** — un dispositivo a elegir: sus valores en directo
+  (posición, brillo, consigna, temperatura, potencia, pila…), un gráfico del
+  historial de 24 h y sus mandos (abrir / parar / cerrar una persiana,
+  encender o apagar una luz o un portón, consigna ±0,5 °C en un termostato).
+- **Persianas Tydom** — la posición de cada persiana, cuántas están abiertas
+  o cerradas, y los botones **Abrir todo** / **Parar todo** / **Cerrar todo**
+  (cerrar pide una confirmación). Se puede limitar a algunas persianas.
+- **Pilas Tydom** — el nivel de pila de cada sensor Tydom, las más bajas
+  primero: en rojo al 15 % o menos (o si el dispositivo indica un fallo de
+  pila), en naranja al 30 % o menos. El ajuste **Solo pilas bajas** oculta
+  las que están bien.
+
 ## Solución de problemas
 
 - **Ningún dispositivo en Descubrimiento**: consulta los registros del
