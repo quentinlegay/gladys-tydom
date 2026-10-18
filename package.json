@@ -1,6 +1,6 @@
 {
   "name": "gladys-tydom",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "Gladys Assistant external integration for Delta Dore Tydom devices, through tydom2mqtt.",
   "type": "module",
