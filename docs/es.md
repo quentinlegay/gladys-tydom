@@ -93,6 +93,11 @@ en Gladys, con el nombre que les diste.
 - **«Broker MQTT inaccesible»**: el host debe ser accesible desde los
   contenedores de Gladys (IP local, no `localhost`), y el usuario/contraseña
   aceptados por el broker.
+- **Las persianas ya no responden (`ConnectionClosedOK` en los registros de
+  tydom2mqtt)**: la pasarela Tydom cerró su conexión y tydom2mqtt no se
+  reconectó. La integración lo detecta (sin respuesta tras un comando, o un
+  largo silencio) y reinicia tydom2mqtt automáticamente en menos de un minuto.
+  Vuelve a enviar el comando cuando los dispositivos se hayan actualizado.
 - **Un portón hace lo contrario de lo que se muestra**: los portones se
   controlan por impulsos, el estado mostrado es el último comunicado por la
   pasarela Tydom.

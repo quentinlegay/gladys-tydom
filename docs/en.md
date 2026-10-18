@@ -88,6 +88,11 @@ under the name you gave them.
 - **"MQTT broker unreachable"**: the host must be reachable from the Gladys
   containers (LAN IP, not `localhost`), and the user/password accepted by the
   broker.
+- **Shutters no longer respond (`ConnectionClosedOK` in the tydom2mqtt
+  logs)**: the Tydom gateway closed its connection and tydom2mqtt did not
+  reconnect. The integration detects it (no answer after a command, or a long
+  silence) and restarts tydom2mqtt automatically within a minute. Send the
+  command again once the devices are updated.
 - **A gate does the opposite of what is shown**: gates are driven by
   impulses, the state shown is the last one reported by the Tydom gateway.
 

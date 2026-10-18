@@ -96,6 +96,12 @@ hinzugefügten Tydom-Geräte, unter dem Namen, den Sie ihnen gegeben haben.
 - **„MQTT-Broker nicht erreichbar“**: Der Host muss von den Gladys-Containern
   aus erreichbar sein (lokale IP, nicht `localhost`), und Benutzer/Passwort
   müssen vom Broker akzeptiert werden.
+- **Rollläden reagieren nicht mehr (`ConnectionClosedOK` in den Logs von
+  tydom2mqtt)**: Das Tydom-Gateway hat seine Verbindung geschlossen und
+  tydom2mqtt hat sich nicht neu verbunden. Die Integration erkennt das (keine
+  Antwort nach einem Befehl oder lange Stille) und startet tydom2mqtt
+  innerhalb einer Minute automatisch neu. Senden Sie den Befehl erneut, sobald
+  die Geräte aktualisiert sind.
 - **Ein Tor tut das Gegenteil des angezeigten Zustands**: Tore werden über
   Impulse gesteuert, der angezeigte Zustand ist der zuletzt vom Tydom-Gateway
   gemeldete.

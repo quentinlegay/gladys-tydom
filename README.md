@@ -34,6 +34,14 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 - **States and commands go through the broker.** State messages are forwarded
   with `publishState`; Gladys commands are published on the command topics
   announced by the discovery.
+- **Watchdog.** tydom2mqtt can lose the Tydom websocket for good (the
+  gateway closes it, its reconnect task dies) while its process and MQTT
+  connection stay up: commands then fail with `ConnectionClosedOK`. When a
+  command gets no live message back within 20 s, or nothing came for 15 min,
+  the integration probes tydom2mqtt (`gladys/tydom/update`, which makes it
+  re-read the gateway); still silent 30 s later, it restarts the
+  sub-container (at most once per 5 min). Skipped when tydom2mqtt runs
+  outside Gladys.
 - **Dashboard widgets** (manifest `widgets`, Gladys >= 5.1.0): `tydom_device`
   binds its tiles, chart and buttons to the features of one device (live, no
   refresh needed); `shutters` and `batteries` list the devices created in
@@ -53,7 +61,8 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 │  └─ tydom/
 │     ├─ mapping.js                  # HA discovery entity -> Gladys features (pure)
 │     ├─ catalog.js                  # entities -> Gladys devices, state/command routing
-│     └─ bridge.js                   # MQTT client (discovery, states, commands)
+│     ├─ bridge.js                   # MQTT client (discovery, states, commands)
+│     └─ watchdog.js                 # restarts tydom2mqtt when it stops answering
 ├─ test/                             # node --test unit tests
 ├─ docs/{en,fr,de,es}.md             # user documentation, re-hosted by Gladys
 ├─ gladys-assistant-integration.json # manifest (config schema, sub-container…)

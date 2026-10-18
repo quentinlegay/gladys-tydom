@@ -96,6 +96,12 @@ appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez donné.
 - **« Broker MQTT injoignable »** : l'hôte doit être joignable depuis les
   conteneurs Gladys (IP locale, pas `localhost`), et l'utilisateur/mot de
   passe acceptés par le broker.
+- **Les volets ne répondent plus (`ConnectionClosedOK` dans les logs de
+  tydom2mqtt)** : la box Tydom a fermé sa connexion et tydom2mqtt ne s'est
+  pas reconnecté. L'intégration le détecte (plus aucune réponse après une
+  commande, ou un long silence) et redémarre tydom2mqtt automatiquement en
+  moins d'une minute. Renvoyez la commande une fois les appareils remis à
+  jour.
 - **Un portail fait l'inverse de l'état affiché** : les portails sont pilotés
   par impulsions, l'état affiché est le dernier remonté par la box Tydom.
 
