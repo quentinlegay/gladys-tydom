@@ -26,6 +26,8 @@ const DEVICES_DEBOUNCE_MS = 3000;
  *   - 'disconnected'       (message) the broker connection is down
  *   - 'devices'            (devices) the Gladys device list changed
  *   - 'state'              (feature, value) a feature got a new value
+ *   - 'activity'           tydom2mqtt published something (live, not retained)
+ *   - 'command'            a Gladys command was sent to tydom2mqtt
  */
 export class TydomBridge extends EventEmitter {
   /**
@@ -44,6 +46,8 @@ export class TydomBridge extends EventEmitter {
     this.lastStates = new Map();
     /** @type {Map<string, number>} last value per feature external id */
     this.values = new Map();
+    /** @type {Set<string>} topics we publish, echoed back by the broker */
+    this.ownTopics = new Set();
     this.client = null;
     this.devicesTimer = null;
   }
@@ -73,7 +77,9 @@ export class TydomBridge extends EventEmitter {
       });
       this.emit('connected');
     });
-    client.on('message', (topic, payload) => {
+    client.on('message', (topic, payload, packet) => {
+      // Retained messages are replays: only live ones prove tydom2mqtt works.
+      if (!packet?.retain && !this.ownTopics.has(topic)) this.emit('activity');
       this.handleMessage(topic, payload.toString()).catch((err) =>
         logger.error(`Failed to handle ${topic}`, err),
       );
@@ -177,6 +183,7 @@ export class TydomBridge extends EventEmitter {
     const { topic, payload } = feature.toCommand(value);
     logger.info(`Command ${featureExternalId} = ${value} -> ${topic} ${payload}`);
     await this.publish(topic, payload);
+    this.emit('command');
 
     // No state topic (e.g. shutter open/close/stop): reflect the order itself.
     if (!feature.stateTopic) {
@@ -194,6 +201,7 @@ export class TydomBridge extends EventEmitter {
     if (!this.connected) {
       return Promise.reject(new Error('MQTT broker not connected'));
     }
+    this.ownTopics.add(topic);
     return new Promise((resolve, reject) => {
       this.client.publish(topic, payload, { qos: 0, retain: false }, (err) =>
         err ? reject(err) : resolve(),

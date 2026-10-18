@@ -17,12 +17,19 @@
 
 import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { missingConfig, normalizeConfig } from './src/config.js';
-import { applyContainer } from './src/container.js';
+import { CONTAINER_NAME, applyContainer } from './src/container.js';
 import { TydomBridge } from './src/tydom/bridge.js';
+import { TydomWatchdog } from './src/tydom/watchdog.js';
 import { registerWidgets } from './src/widgets.js';
 
 const gladys = new GladysIntegration();
 const bridge = new TydomBridge(gladys);
+// Restarts tydom2mqtt when it stays connected to MQTT but lost the gateway.
+const watchdog = new TydomWatchdog({
+  bridge,
+  probe: () => bridge.requestResync(),
+  restart: () => gladys.restartContainer(CONTAINER_NAME),
+});
 
 // Current configuration (hot-reloaded via onConfigUpdated).
 let config = normalizeConfig();
@@ -91,6 +98,7 @@ async function applyConfig() {
   const missing = missingConfig(config);
   if (missing) {
     logger.warn(`Incomplete configuration: ${missing.en}`);
+    watchdog.stop();
     bridge.stop();
     await gladys.setConnectionStatus(false, missing);
     return;
@@ -108,6 +116,9 @@ async function applyConfig() {
     return;
   }
   bridge.start(config);
+  // tydom2mqtt run outside Gladys is not ours to restart.
+  if (config.manage_container) watchdog.start();
+  else watchdog.stop();
 }
 
 gladys.onConfigUpdated(async (newConfig) => {
@@ -145,6 +156,7 @@ gladys.on('connected', async () => {
 gladys.handleShutdown((signal) => {
   logger.info(`Received ${signal} -> graceful shutdown`);
   widgets.stop();
+  watchdog.stop();
   bridge.stop();
 });
 
