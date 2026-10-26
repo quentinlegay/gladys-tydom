@@ -7,14 +7,28 @@ workflow turns the `Unreleased` section into the new version when it bumps it.
 
 ## [Unreleased]
 
+### Added
+
+- **Tydom shutters** widget: a **Control a shutter…** button opens a form to
+  pick one shutter in a list and send it an order — open, stop, close or an
+  exact position (0-100 %). Every shutter can now be driven separately from
+  this single widget, next to the "all" buttons.
+
+### Removed
+
+- **Tydom shutter** widget (one widget per shutter), added in 2.2.1: use the
+  **Control a shutter…** button of the **Tydom shutters** widget instead.
+  Delete the Tydom shutter widgets from your dashboards.
+
 ## [2.2.1] - 2026-10-26
 
 ### Added
 
-- **Tydom shutters** widget: a **Control a shutter…** button opens a form to
-  pick one shutter and send it an order — open, stop, close or an exact
-  position (0-100 %). Every shutter can now be driven separately from a
-  single widget, next to the "all" buttons.
+- **Tydom shutter** dashboard widget, to drive one shutter from the
+  dashboard: live position gauge, battery level, 24 h position history,
+  **Open** / **Stop** / **Close** buttons, and a **Position…** button that
+  opens a form pre-filled with the current position to send the shutter to an
+  exact position (0-100 %). Add one widget per shutter.
 - Store search keywords: the integration is now found by searching for
   Tydom, Delta Dore, tydom2mqtt, X3D, roller shutter or gate (fr, de, es).
 - Documentation of every dashboard widget — settings, content, buttons and
