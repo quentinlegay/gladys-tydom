@@ -9,22 +9,34 @@ workflow turns the `Unreleased` section into the new version when it bumps it.
 
 ### Added
 
-- **Tydom shutter** dashboard widget: drive one shutter — live position and
-  battery, 24 h position history, open / stop / close, and a **Position…**
-  button to move it to an exact position (0-100 %).
-- Store search keywords (`keywords` in the manifest).
-- Full documentation of the four dashboard widgets (fr, en, de, es).
+- **Tydom shutter** dashboard widget, to drive one shutter from the
+  dashboard: live position gauge, battery level, 24 h position history,
+  **Open** / **Stop** / **Close** buttons, and a **Position…** button that
+  opens a form pre-filled with the current position to send the shutter to an
+  exact position (0-100 %). Add one widget per shutter.
+- Store search keywords: the integration is now found by searching for
+  Tydom, Delta Dore, tydom2mqtt, X3D, roller shutter or gate (fr, de, es).
+- Documentation of every dashboard widget — settings, content, buttons and
+  refresh — in English, French, German and Spanish.
 
 ### Changed
 
-- Requires Gladys 5.3.0 or later (store floor for the search keywords).
+- **Requires Gladys 5.3.0 or later.** Instances on Gladys 5.1 or 5.2 keep
+  their current version and do not see this update.
+- Fewer state updates sent to Gladys: tydom2mqtt republishes every state at
+  each Tydom poll (every 5 min by default), only the values that changed are
+  now forwarded, plus an unchanged one every 30 min so it stays recently
+  dated. This keeps large installations under the 300 states per minute
+  Gladys accepts.
 - Upgrade `@gladysassistant/integration-sdk` to 0.16.0.
-- Only the state values that changed are sent to Gladys
-  (`publishChangedStates`), plus an unchanged one every 30 min: tydom2mqtt
-  republishes every state at each Tydom poll, and Gladys accepts at most 300
-  states per minute.
-- Release: the Docker image is published before the manifest that references
-  it reaches the default branch, then checked by the store validator.
+- Release workflow: the Docker image is published before the manifest that
+  references it reaches the default branch (the store drops an integration
+  whose image cannot be pulled), then the store validator checks it, images
+  included. The changelog is now filled in by the same workflow.
+
+## [2.2.0] - 2026-10-26
+
+Maintenance release, no functional change: same code as 2.1.1.
 
 ## [2.1.1] - 2026-10-18
 
@@ -100,7 +112,8 @@ First public release.
 
 Same code as 2.0.0, before the project was renamed to `gladys-tydom`.
 
-[Unreleased]: https://github.com/quentinlegay/gladys-tydom/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/quentinlegay/gladys-tydom/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/quentinlegay/gladys-tydom/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/quentinlegay/gladys-tydom/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/quentinlegay/gladys-tydom/compare/v2.0.4...v2.1.0
 [2.0.4]: https://github.com/quentinlegay/gladys-tydom/compare/v2.0.3...v2.0.4
