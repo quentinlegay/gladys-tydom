@@ -123,7 +123,9 @@ npx github:GladysAssistant/integration-store .   # store admission rules
 2. Replace the owner in `docker_image` and `cover_image` of
    `gladys-assistant-integration.json` with your GitHub account, and replace
    `cover.png` with a real 800×534 px cover.
-3. Run **Actions → Release → Run workflow**: it bumps the version, tags,
+3. Note your changes under `Unreleased` in `CHANGELOG.md` as you go.
+4. Run **Actions → Release → Run workflow**: it bumps the version, turns the
+   `Unreleased` changelog section into that version, tags,
    builds the multi-arch image to `ghcr.io`, and only then pushes the bumped
    manifest to the branch (the store drops an integration whose image cannot
    be pulled) and runs the store validator with the image check. Make the

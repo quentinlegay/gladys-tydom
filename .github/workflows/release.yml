@@ -8,7 +8,8 @@
 #   2. writes it into `package.json`, `package-lock.json` AND the manifest
 #      (`gladys-assistant-integration.json`: both `version` and the
 #      `docker_image` tag, so the indexer and the image stay in lockstep);
-#   3. commits the bump and pushes ONLY the `vX.Y.Z` tag;
+#   3. turns the `Unreleased` section of CHANGELOG.md into `X.Y.Z` (today's
+#      date), then commits the bump and pushes ONLY the `vX.Y.Z` tag;
 #   4. calls build.yml to publish the multi-arch image (`:X.Y.Z` + `:latest`);
 #   5. then pushes the bump commit to the branch and runs the store validator
 #      with the image check.
@@ -77,6 +78,9 @@ jobs:
             gladys-assistant-integration.json > "$tmp"
           mv "$tmp" gladys-assistant-integration.json
 
+          # Unreleased -> X.Y.Z in the changelog, with its comparison link.
+          node scripts/changelog.js "$new_version"
+
           echo "version=${new_version}" >> "$GITHUB_OUTPUT"
 
       # The bump commit only travels with the tag for now: the branch gets it
@@ -89,7 +93,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add package.json package-lock.json gladys-assistant-integration.json
+          git add package.json package-lock.json gladys-assistant-integration.json CHANGELOG.md
           git commit -m "chore(release): ${VERSION}"
           git tag -a "v${VERSION}" -m "Release ${VERSION}"
 
