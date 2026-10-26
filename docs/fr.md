@@ -69,22 +69,89 @@ inclinaison des lames.
 ## Widgets du tableau de bord
 
 Nécessite Gladys 5.1.0 ou plus récent. Dans **Tableau de bord → Modifier →
-Ajouter un widget**, choisissez l'un des widgets Tydom. Ils n'affichent que les
-appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez donné.
+Ajouter un widget**, choisissez l'un des quatre widgets Tydom. Ils n'affichent
+que les appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez
+donné : un appareil seulement découvert n'y apparaît pas.
 
-- **Appareil Tydom** — un appareil au choix : ses valeurs en direct
-  (position, luminosité, consigne, température, puissance, pile…), un
-  graphique de l'historique sur 24 h et ses commandes (ouvrir / stop / fermer
-  un volet, allumer ou éteindre une lumière ou un portail, consigne ±0,5 °C
-  sur un thermostat).
-- **Volets Tydom** — la position de chaque volet, le nombre de volets ouverts
-  ou fermés, et les boutons **Tout ouvrir** / **Tout arrêter** / **Tout
-  fermer** (la fermeture demande une confirmation). Vous pouvez le limiter à
-  quelques volets.
-- **Piles Tydom** — le niveau de pile de chaque capteur Tydom, les plus
-  faibles en premier : en rouge à 15 % ou moins (ou si l'appareil signale un
-  défaut de pile), en orange à 30 % ou moins. Le réglage **Seulement les piles
-  faibles** masque celles en bon état.
+| Widget         | Réglages                          | Pour                                    |
+| -------------- | --------------------------------- | --------------------------------------- |
+| Appareil Tydom | un appareil (obligatoire)         | tout voir et piloter d'un appareil      |
+| Volet Tydom    | un volet (obligatoire)            | piloter un volet, position précise      |
+| Volets Tydom   | des volets (tous si vide)         | l'état de la maison, tout ouvrir/fermer |
+| Piles Tydom    | seulement les piles faibles (non) | surveiller les piles des capteurs       |
+
+### Appareil Tydom
+
+Un appareil au choix, quel qu'il soit :
+
+- **Valeurs en direct** (jusqu'à 6) : position d'un volet et luminosité
+  d'une lumière en jauge, puis consigne, température, humidité, puissance,
+  énergie, courant, tension, mouvement et pile.
+- **Graphique des dernières 24 h** de la mesure la plus parlante :
+  température, sinon puissance, humidité, position du volet ou luminosité.
+  Absent si l'historique de la fonctionnalité est désactivé dans Gladys.
+- **Commandes** : **Ouvrir** / **Stop** / **Fermer** pour un volet,
+  **Allumer** / **Éteindre** pour une lumière ou un portail, **−0,5 °C** /
+  **+0,5 °C** pour un thermostat (la consigne est bornée par le min/max de
+  l'appareil).
+
+Tout est lié aux fonctionnalités de l'appareil : les valeurs et le graphique
+suivent les changements en temps réel. Si l'appareil est supprimé de Gladys,
+le widget vous invite à en choisir un autre.
+
+### Volet Tydom
+
+Pour piloter **un seul volet** depuis le tableau de bord :
+
+- la **position** en jauge (0 % fermé, 100 % ouvert) et le niveau de pile si
+  le volet en a une, en direct ;
+- l'**historique de la position** sur 24 h ;
+- les boutons **Ouvrir** / **Stop** / **Fermer** ;
+- le bouton **Position…** : il ouvre un petit formulaire pré-rempli avec la
+  position actuelle, saisissez une valeur entre 0 et 100 % et validez pour y
+  amener le volet. Un message confirme l'ordre envoyé.
+
+Le bouton **Position…** n'apparaît que pour les volets dont la box Tydom
+accepte une position (les volets motorisés classiques) ; il demande une
+version de Gladys qui gère les formulaires de widget — sur une version plus
+ancienne, l'ordre est refusé avec un message plutôt qu'envoyé au hasard. Si
+l'appareil choisi n'est pas un volet, le widget l'indique. Ajoutez un widget
+par volet à piloter.
+
+### Volets Tydom
+
+Tous vos volets d'un coup d'œil :
+
+- le nombre de volets **ouverts** (position > 0 %) et **fermés** ;
+- la liste des volets triés par nom avec leur état : **Fermé**, **Ouvert**
+  ou la position en % (10 au plus, les suivants comptés en « +N autres ») ;
+- les boutons **Tout ouvrir** / **Tout arrêter** / **Tout fermer** (la
+  fermeture demande une confirmation). Le message indique combien de volets
+  ont reçu l'ordre, et combien ont échoué.
+
+Le réglage **Volets** limite le widget à quelques volets (par pièce, par
+étage…) : laissé vide, il les prend tous, y compris ceux ajoutés plus tard.
+La liste se met à jour quelques secondes après chaque mouvement.
+
+### Piles Tydom
+
+Le niveau de pile de chaque appareil Tydom sur pile, les plus faibles en
+premier :
+
+- le nombre de piles **à changer** et le nombre de piles **suivies** ;
+- la liste : en rouge à 15 % ou moins (ou si l'appareil signale un défaut de
+  pile), en orange à 30 % ou moins, en vert au-delà.
+
+Le réglage **Seulement les piles faibles** masque celles en bon état (le
+widget affiche alors « Toutes les piles sont en bon état. »).
+
+### Bon à savoir
+
+- Les boutons propres aux widgets (**Tout ouvrir**/**Tout arrêter**/**Tout
+  fermer**, **Position…**, **±0,5 °C**) vérifient d'abord le broker MQTT :
+  s'il est déconnecté, un message le signale au lieu d'envoyer l'ordre.
+- Les volets Tydom ne remontent que leur position : l'état « en mouvement »
+  n'existe pas, la position s'actualise à l'arrêt du volet.
 
 ## Dépannage
 

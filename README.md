@@ -42,12 +42,22 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
   re-read the gateway); still silent 30 s later, it restarts the
   sub-container (at most once per 5 min). Skipped when tydom2mqtt runs
   outside Gladys.
-- **Dashboard widgets** (manifest `widgets`, Gladys >= 5.1.0): `tydom_device`
-  binds its tiles, chart and buttons to the features of one device (live, no
-  refresh needed); `shutters` and `batteries` list the devices created in
-  Gladys with the last values received, and are nudged with
-  `requestWidgetRefresh` (throttled under the core's 1 per 10 s limit) when a
-  shutter position or a battery changes.
+- **Dashboard widgets** (manifest `widgets`, Gladys >= 5.1.0, all in
+  `src/widgets.js`; user-facing description in `docs/*.md`):
+
+  | Key            | Settings               | Content                                                                   | Actions (`onWidgetAction`)                  | Refresh                       |
+  | -------------- | ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------- |
+  | `tydom_device` | `device` (select)      | ≤ 6 device-bound tiles, one 24 h chart, feature buttons                   | `setpoint_down` / `setpoint_up` (±0.5 °C)   | live (bound), TTL 300 s       |
+  | `shutter`      | `device` (select)      | position gauge, battery, 24 h stepline, open/stop/close, `Position…` form | `set_position` (`values.position`, 0-100)   | live + nudge on shutter state |
+  | `shutters`     | `devices` (multi, all) | open/closed counters, status list (≤ 10), "all" buttons                   | `open` / `stop` / `close` (close confirmed) | nudge on shutter state, 60 s  |
+  | `batteries`    | `only_low` (boolean)   | to-replace / tracked counters, status list worst first                    | —                                           | nudge on battery, 600 s       |
+
+  The `build*` functions are pure (devices + last values -> content) and
+  checked against `validateWidgetContent` in the tests. Device-bound
+  components follow the states with no refresh; the inline values are nudged
+  with `requestWidgetRefresh` (throttled under the core's 1 per 10 s limit).
+  The `shutter` form (`action.fields`) needs a core with widget forms: an
+  action received without `values` is refused, never sent with a guess.
 
 ## Project structure
 
@@ -57,7 +67,7 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 ├─ src/
 │  ├─ config.js                      # config defaults, normalization, validation
 │  ├─ container.js                   # tydom2mqtt sub-container lifecycle
-│  ├─ widgets.js                     # dashboard widgets (device, shutters, batteries)
+│  ├─ widgets.js                     # dashboard widgets (device, shutter(s), batteries)
 │  └─ tydom/
 │     ├─ mapping.js                  # HA discovery entity -> Gladys features (pure)
 │     ├─ catalog.js                  # entities -> Gladys devices, state/command routing

@@ -64,20 +64,86 @@ Not supported yet: alarm, heating modes and presets, shutter tilt.
 ## Dashboard widgets
 
 Requires Gladys 5.1.0 or later. In **Dashboard → Edit → Add a widget**, pick
-one of the Tydom widgets. They only show the Tydom devices added in Gladys,
-under the name you gave them.
+one of the four Tydom widgets. They only show the Tydom devices added in
+Gladys, under the name you gave them: a device that is only discovered does
+not appear.
 
-- **Tydom device** — one device of your choice: its values live (position,
-  brightness, setpoint, temperature, power, battery…), a 24-hour history chart
-  and its controls (open / stop / close a shutter, turn a light or a gate
-  on or off, setpoint ±0.5 °C on a thermostat).
-- **Tydom shutters** — the position of every shutter, how many are open or
-  closed, and **Open all** / **Stop all** / **Close all** buttons (closing
-  asks for a confirmation). Optionally restrict it to a few shutters.
-- **Tydom batteries** — the battery level of every Tydom sensor, the weakest
-  first: red at 15 % or less (or when the device reports a battery fault),
-  orange at 30 % or less. The **Only low batteries** setting hides the
-  healthy ones.
+| Widget          | Settings                 | For                                    |
+| --------------- | ------------------------ | -------------------------------------- |
+| Tydom device    | one device (required)    | see and control everything of a device |
+| Tydom shutter   | one shutter (required)   | drive one shutter, exact position      |
+| Tydom shutters  | shutters (all if empty)  | the house at a glance, open/close all  |
+| Tydom batteries | only low batteries (off) | keep an eye on the sensor batteries    |
+
+### Tydom device
+
+One device of your choice, whatever it is:
+
+- **Live values** (up to 6): shutter position and light brightness as
+  gauges, then setpoint, temperature, humidity, power, energy, current,
+  voltage, motion and battery.
+- **24-hour chart** of the most telling measure: temperature, else power,
+  humidity, shutter position or brightness. Absent when the feature history
+  is disabled in Gladys.
+- **Controls**: **Open** / **Stop** / **Close** for a shutter, **On** /
+  **Off** for a light or a gate, **−0.5 °C** / **+0.5 °C** for a thermostat
+  (the setpoint stays within the device min/max).
+
+Everything is bound to the device features: values and chart follow the
+changes in real time. If the device is deleted from Gladys, the widget asks
+you to pick another one.
+
+### Tydom shutter
+
+To drive **one shutter** from the dashboard:
+
+- the **position** as a gauge (0 % closed, 100 % open) and the battery level
+  when the shutter has one, live;
+- the **position history** over 24 hours;
+- the **Open** / **Stop** / **Close** buttons;
+- the **Position…** button: it opens a small form pre-filled with the current
+  position, type a value between 0 and 100 % and confirm to move the shutter
+  there. A message confirms the order sent.
+
+The **Position…** button only shows for shutters whose Tydom gateway accepts
+a position (regular motorized shutters); it needs a Gladys version that
+supports widget forms — on an older one, the order is refused with a message
+rather than sent blindly. If the chosen device is not a shutter, the widget
+says so. Add one widget per shutter to drive.
+
+### Tydom shutters
+
+All your shutters at a glance:
+
+- how many shutters are **open** (position > 0 %) and **closed**;
+- the shutters sorted by name with their state: **Closed**, **Open** or the
+  position in % (10 at most, the others counted as "+N more");
+- the **Open all** / **Stop all** / **Close all** buttons (closing asks for a
+  confirmation). The message tells how many shutters got the order, and how
+  many failed.
+
+The **Shutters** setting restricts the widget to a few shutters (per room,
+per floor…): left empty, it takes them all, including the ones added later.
+The list updates a few seconds after each move.
+
+### Tydom batteries
+
+The battery level of every battery-powered Tydom device, the weakest first:
+
+- how many batteries are **to replace** and how many are **tracked**;
+- the list: red at 15 % or less (or when the device reports a battery
+  fault), orange at 30 % or less, green above.
+
+The **Only low batteries** setting hides the healthy ones (the widget then
+shows "All batteries are fine.").
+
+### Good to know
+
+- The widgets' own buttons (**Open all**/**Stop all**/**Close all**,
+  **Position…**, **±0.5 °C**) check the MQTT broker first: when it is
+  disconnected, a message says so instead of sending the order.
+- Tydom shutters only report their position: there is no "moving" state, the
+  position updates when the shutter stops.
 
 ## Troubleshooting
 
