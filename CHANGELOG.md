@@ -7,6 +7,8 @@ workflow turns the `Unreleased` section into the new version when it bumps it.
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-10-26
+
 ### Added
 
 - **Tydom shutters** widget: a **Control a shutter…** button opens a form to
@@ -127,7 +129,8 @@ First public release.
 
 Same code as 2.0.0, before the project was renamed to `gladys-tydom`.
 
-[Unreleased]: https://github.com/quentinlegay/gladys-tydom/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/quentinlegay/gladys-tydom/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/quentinlegay/gladys-tydom/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/quentinlegay/gladys-tydom/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/quentinlegay/gladys-tydom/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/quentinlegay/gladys-tydom/compare/v2.1.0...v2.1.1
