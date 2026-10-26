@@ -69,14 +69,13 @@ inclinaison des lames.
 ## Widgets du tableau de bord
 
 Dans **Tableau de bord → Modifier →
-Ajouter un widget**, choisissez l'un des quatre widgets Tydom. Ils n'affichent
+Ajouter un widget**, choisissez l'un des trois widgets Tydom. Ils n'affichent
 que les appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez
 donné : un appareil seulement découvert n'y apparaît pas.
 
 | Widget         | Réglages                          | Pour                                   |
 | -------------- | --------------------------------- | -------------------------------------- |
 | Appareil Tydom | un appareil (obligatoire)         | tout voir et piloter d'un appareil     |
-| Volet Tydom    | un volet (obligatoire)            | piloter un volet, position précise     |
 | Volets Tydom   | des volets (tous si vide)         | tous les volets, un par un ou ensemble |
 | Piles Tydom    | seulement les piles faibles (non) | surveiller les piles des capteurs      |
 
@@ -98,23 +97,6 @@ Un appareil au choix, quel qu'il soit :
 Tout est lié aux fonctionnalités de l'appareil : les valeurs et le graphique
 suivent les changements en temps réel. Si l'appareil est supprimé de Gladys,
 le widget vous invite à en choisir un autre.
-
-### Volet Tydom
-
-Pour piloter **un seul volet** depuis le tableau de bord :
-
-- la **position** en jauge (0 % fermé, 100 % ouvert) et le niveau de pile si
-  le volet en a une, en direct ;
-- l'**historique de la position** sur 24 h ;
-- les boutons **Ouvrir** / **Stop** / **Fermer** ;
-- le bouton **Position…** : il ouvre un petit formulaire pré-rempli avec la
-  position actuelle, saisissez une valeur entre 0 et 100 % et validez pour y
-  amener le volet. Un message confirme l'ordre envoyé.
-
-Le bouton **Position…** n'apparaît que pour les volets dont la box Tydom
-accepte une position (les volets motorisés classiques). Si
-l'appareil choisi n'est pas un volet, le widget l'indique. Ajoutez un widget
-par volet à piloter.
 
 ### Volets Tydom
 
@@ -152,7 +134,7 @@ widget affiche alors « Toutes les piles sont en bon état. »).
 ### Bon à savoir
 
 - Les boutons propres aux widgets (**Tout ouvrir**/**Tout arrêter**/**Tout
-  fermer**, **Position…**, **±0,5 °C**) vérifient d'abord le broker MQTT :
+  fermer**, **Piloter un volet…**, **±0,5 °C**) vérifient d'abord le broker MQTT :
   s'il est déconnecté, un message le signale au lieu d'envoyer l'ordre.
 - Les volets Tydom ne remontent que leur position : l'état « en mouvement »
   n'existe pas, la position s'actualise à l'arrêt du volet.

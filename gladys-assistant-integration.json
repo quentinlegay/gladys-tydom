@@ -295,36 +295,6 @@
       ]
     },
     {
-      "key": "shutter",
-      "label": {
-        "en": "Tydom shutter",
-        "fr": "Volet Tydom",
-        "de": "Tydom-Rollladen",
-        "es": "Persiana Tydom"
-      },
-      "description": {
-        "en": "Drive one shutter: open, stop, close or move it to an exact position.",
-        "fr": "Pilotez un volet : ouvrir, arrêter, fermer ou l'amener à une position précise.",
-        "de": "Einen Rollladen steuern: öffnen, stoppen, schließen oder auf eine genaue Position fahren.",
-        "es": "Controla una persiana: abrir, parar, cerrar o llevarla a una posición exacta."
-      },
-      "icon": "sun",
-      "settings": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": {
-            "en": "Shutter",
-            "fr": "Volet",
-            "de": "Rollladen",
-            "es": "Persiana"
-          },
-          "required": true
-        }
-      ]
-    },
-    {
       "key": "shutters",
       "label": {
         "en": "Tydom shutters",

@@ -64,14 +64,13 @@ Not supported yet: alarm, heating modes and presets, shutter tilt.
 ## Dashboard widgets
 
 In **Dashboard → Edit → Add a widget**, pick
-one of the four Tydom widgets. They only show the Tydom devices added in
+one of the three Tydom widgets. They only show the Tydom devices added in
 Gladys, under the name you gave them: a device that is only discovered does
 not appear.
 
 | Widget          | Settings                 | For                                    |
 | --------------- | ------------------------ | -------------------------------------- |
 | Tydom device    | one device (required)    | see and control everything of a device |
-| Tydom shutter   | one shutter (required)   | drive one shutter, exact position      |
 | Tydom shutters  | shutters (all if empty)  | every shutter, one by one or all       |
 | Tydom batteries | only low batteries (off) | keep an eye on the sensor batteries    |
 
@@ -92,22 +91,6 @@ One device of your choice, whatever it is:
 Everything is bound to the device features: values and chart follow the
 changes in real time. If the device is deleted from Gladys, the widget asks
 you to pick another one.
-
-### Tydom shutter
-
-To drive **one shutter** from the dashboard:
-
-- the **position** as a gauge (0 % closed, 100 % open) and the battery level
-  when the shutter has one, live;
-- the **position history** over 24 hours;
-- the **Open** / **Stop** / **Close** buttons;
-- the **Position…** button: it opens a small form pre-filled with the current
-  position, type a value between 0 and 100 % and confirm to move the shutter
-  there. A message confirms the order sent.
-
-The **Position…** button only shows for shutters whose Tydom gateway accepts
-a position (regular motorized shutters). If the chosen device is not a shutter, the widget
-says so. Add one widget per shutter to drive.
 
 ### Tydom shutters
 
@@ -143,7 +126,7 @@ shows "All batteries are fine.").
 ### Good to know
 
 - The widgets' own buttons (**Open all**/**Stop all**/**Close all**,
-  **Position…**, **±0.5 °C**) check the MQTT broker first: when it is
+  **Control a shutter…**, **±0.5 °C**) check the MQTT broker first: when it is
   disconnected, a message says so instead of sending the order.
 - Tydom shutters only report their position: there is no "moving" state, the
   position updates when the shutter stops.
