@@ -44,7 +44,7 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
   re-read the gateway); still silent 30 s later, it restarts the
   sub-container (at most once per 5 min). Skipped when tydom2mqtt runs
   outside Gladys.
-- **Dashboard widgets** (manifest `widgets`, Gladys >= 5.1.0, all in
+- **Dashboard widgets** (manifest `widgets`, all in
   `src/widgets.js`; user-facing description in `docs/*.md`):
 
   | Key            | Settings               | Content                                                                   | Actions (`onWidgetAction`)                  | Refresh                       |

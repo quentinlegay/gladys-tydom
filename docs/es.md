@@ -16,7 +16,7 @@ Tydom y publica tus dispositivos en tu broker MQTT. La integración los lee en
 el broker y envía tus órdenes a través de él.
 
 Necesitas un broker MQTT accesible desde Gladys, por ejemplo el broker
-Mosquitto instalado por la integración MQTT de Gladys.
+Mosquitto instalado por la integración MQTT de Gladys. La integración requiere Gladys 5.3.0 o posterior.
 
 ## Configuración
 
@@ -67,7 +67,7 @@ las lamas.
 
 ## Widgets del panel
 
-Requiere Gladys 5.1.0 o posterior. En **Panel → Editar → Añadir un widget**,
+En **Panel → Editar → Añadir un widget**,
 elige uno de los cuatro widgets Tydom. Solo muestran los dispositivos Tydom
 añadidos en Gladys, con el nombre que les diste: un dispositivo solo
 descubierto no aparece.
@@ -111,10 +111,7 @@ Para controlar **una sola persiana** desde el panel:
   posición. Un mensaje confirma la orden enviada.
 
 El botón **Posición…** solo aparece en las persianas cuya pasarela Tydom
-acepta una posición (las persianas motorizadas habituales); requiere una
-versión de Gladys que gestione los formularios de widget — en una versión
-anterior, la orden se rechaza con un mensaje en lugar de enviarse a ciegas.
-Si el dispositivo elegido no es una persiana, el widget lo indica. Añade un
+acepta una posición (las persianas motorizadas habituales). Si el dispositivo elegido no es una persiana, el widget lo indica. Añade un
 widget por persiana que quieras controlar.
 
 ### Persianas Tydom

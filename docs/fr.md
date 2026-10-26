@@ -16,7 +16,7 @@ Tydom et publie vos appareils sur votre broker MQTT. L'intégration les lit
 sur le broker et renvoie vos commandes par ce même broker.
 
 Il vous faut un broker MQTT joignable depuis Gladys, par exemple le broker
-Mosquitto installé par l'intégration MQTT de Gladys.
+Mosquitto installé par l'intégration MQTT de Gladys. L'intégration nécessite Gladys 5.3.0 ou plus récent.
 
 ## Configuration
 
@@ -68,7 +68,7 @@ inclinaison des lames.
 
 ## Widgets du tableau de bord
 
-Nécessite Gladys 5.1.0 ou plus récent. Dans **Tableau de bord → Modifier →
+Dans **Tableau de bord → Modifier →
 Ajouter un widget**, choisissez l'un des quatre widgets Tydom. Ils n'affichent
 que les appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez
 donné : un appareil seulement découvert n'y apparaît pas.
@@ -112,9 +112,7 @@ Pour piloter **un seul volet** depuis le tableau de bord :
   amener le volet. Un message confirme l'ordre envoyé.
 
 Le bouton **Position…** n'apparaît que pour les volets dont la box Tydom
-accepte une position (les volets motorisés classiques) ; il demande une
-version de Gladys qui gère les formulaires de widget — sur une version plus
-ancienne, l'ordre est refusé avec un message plutôt qu'envoyé au hasard. Si
+accepte une position (les volets motorisés classiques). Si
 l'appareil choisi n'est pas un volet, le widget l'indique. Ajoutez un widget
 par volet à piloter.
 

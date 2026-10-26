@@ -15,7 +15,7 @@ and publishes your devices on your MQTT broker. The integration reads them
 from the broker and sends your commands back through it.
 
 You need an MQTT broker reachable from Gladys, for instance the Mosquitto
-broker installed by the Gladys MQTT integration.
+broker installed by the Gladys MQTT integration. The integration requires Gladys 5.3.0 or later.
 
 ## Configuration
 
@@ -63,7 +63,7 @@ Not supported yet: alarm, heating modes and presets, shutter tilt.
 
 ## Dashboard widgets
 
-Requires Gladys 5.1.0 or later. In **Dashboard → Edit → Add a widget**, pick
+In **Dashboard → Edit → Add a widget**, pick
 one of the four Tydom widgets. They only show the Tydom devices added in
 Gladys, under the name you gave them: a device that is only discovered does
 not appear.
@@ -106,9 +106,7 @@ To drive **one shutter** from the dashboard:
   there. A message confirms the order sent.
 
 The **Position…** button only shows for shutters whose Tydom gateway accepts
-a position (regular motorized shutters); it needs a Gladys version that
-supports widget forms — on an older one, the order is refused with a message
-rather than sent blindly. If the chosen device is not a shutter, the widget
+a position (regular motorized shutters). If the chosen device is not a shutter, the widget
 says so. Add one widget per shutter to drive.
 
 ### Tydom shutters

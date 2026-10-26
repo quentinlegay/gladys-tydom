@@ -15,7 +15,7 @@ Ihrem Tydom-Gateway und veröffentlicht Ihre Geräte auf Ihrem MQTT-Broker. Die
 Integration liest sie vom Broker und sendet Ihre Befehle über ihn zurück.
 
 Sie benötigen einen von Gladys erreichbaren MQTT-Broker, zum Beispiel den
-Mosquitto-Broker, den die MQTT-Integration von Gladys installiert.
+Mosquitto-Broker, den die MQTT-Integration von Gladys installiert. Die Integration erfordert Gladys 5.3.0 oder neuer.
 
 ## Konfiguration
 
@@ -68,7 +68,7 @@ Lamellenneigung.
 
 ## Dashboard-Widgets
 
-Erfordert Gladys 5.1.0 oder neuer. Wählen Sie unter **Dashboard → Bearbeiten
+Wählen Sie unter **Dashboard → Bearbeiten
 → Widget hinzufügen** eines der vier Tydom-Widgets. Sie zeigen nur die in
 Gladys hinzugefügten Tydom-Geräte, unter dem Namen, den Sie ihnen gegeben
 haben: Ein nur erkanntes Gerät erscheint nicht.
@@ -112,9 +112,7 @@ Um **einen einzelnen Rollladen** vom Dashboard aus zu steuern:
   den gesendeten Befehl.
 
 Die Schaltfläche **Position…** erscheint nur bei Rollläden, deren
-Tydom-Gateway eine Position annimmt (übliche motorisierte Rollläden); sie
-erfordert eine Gladys-Version mit Widget-Formularen — bei einer älteren wird
-der Befehl mit einer Meldung abgelehnt statt blind gesendet. Ist das gewählte
+Tydom-Gateway eine Position annimmt (übliche motorisierte Rollläden). Ist das gewählte
 Gerät kein Rollladen, zeigt das Widget dies an. Fügen Sie ein Widget pro zu
 steuerndem Rollladen hinzu.
 
