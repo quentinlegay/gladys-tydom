@@ -72,7 +72,7 @@ not appear.
 | --------------- | ------------------------ | -------------------------------------- |
 | Tydom device    | one device (required)    | see and control everything of a device |
 | Tydom shutter   | one shutter (required)   | drive one shutter, exact position      |
-| Tydom shutters  | shutters (all if empty)  | the house at a glance, open/close all  |
+| Tydom shutters  | shutters (all if empty)  | every shutter, one by one or all       |
 | Tydom batteries | only low batteries (off) | keep an eye on the sensor batteries    |
 
 ### Tydom device
@@ -116,6 +116,11 @@ All your shutters at a glance:
 - how many shutters are **open** (position > 0 %) and **closed**;
 - the shutters sorted by name with their state: **Closed**, **Open** or the
   position in % (10 at most, the others counted as "+N more");
+- the **Control a shutter…** button: it opens a form where you pick **one**
+  shutter in the list, then the order — **Open**, **Stop**, **Close** or
+  **Position** (then type the position you want, from 0 to 100 %). A message
+  confirms the order sent, for instance "Living room: closing". One widget is
+  enough to drive every shutter separately;
 - the **Open all** / **Stop all** / **Close all** buttons (closing asks for a
   confirmation). The message tells how many shutters got the order, and how
   many failed.

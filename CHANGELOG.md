@@ -14,6 +14,10 @@ workflow turns the `Unreleased` section into the new version when it bumps it.
   **Open** / **Stop** / **Close** buttons, and a **Position…** button that
   opens a form pre-filled with the current position to send the shutter to an
   exact position (0-100 %). Add one widget per shutter.
+- **Tydom shutters** widget: a **Control a shutter…** button opens a form to
+  pick one shutter and send it an order — open, stop, close or an exact
+  position (0-100 %). Every shutter can now be driven separately from a
+  single widget, next to the "all" buttons.
 - Store search keywords: the integration is now found by searching for
   Tydom, Delta Dore, tydom2mqtt, X3D, roller shutter or gate (fr, de, es).
 - Documentation of every dashboard widget — settings, content, buttons and

@@ -73,12 +73,12 @@ Ajouter un widget**, choisissez l'un des quatre widgets Tydom. Ils n'affichent
 que les appareils Tydom ajoutés dans Gladys, sous le nom que vous leur avez
 donné : un appareil seulement découvert n'y apparaît pas.
 
-| Widget         | Réglages                          | Pour                                    |
-| -------------- | --------------------------------- | --------------------------------------- |
-| Appareil Tydom | un appareil (obligatoire)         | tout voir et piloter d'un appareil      |
-| Volet Tydom    | un volet (obligatoire)            | piloter un volet, position précise      |
-| Volets Tydom   | des volets (tous si vide)         | l'état de la maison, tout ouvrir/fermer |
-| Piles Tydom    | seulement les piles faibles (non) | surveiller les piles des capteurs       |
+| Widget         | Réglages                          | Pour                                   |
+| -------------- | --------------------------------- | -------------------------------------- |
+| Appareil Tydom | un appareil (obligatoire)         | tout voir et piloter d'un appareil     |
+| Volet Tydom    | un volet (obligatoire)            | piloter un volet, position précise     |
+| Volets Tydom   | des volets (tous si vide)         | tous les volets, un par un ou ensemble |
+| Piles Tydom    | seulement les piles faibles (non) | surveiller les piles des capteurs      |
 
 ### Appareil Tydom
 
@@ -123,6 +123,12 @@ Tous vos volets d'un coup d'œil :
 - le nombre de volets **ouverts** (position > 0 %) et **fermés** ;
 - la liste des volets triés par nom avec leur état : **Fermé**, **Ouvert**
   ou la position en % (10 au plus, les suivants comptés en « +N autres ») ;
+- le bouton **Piloter un volet…** : il ouvre un formulaire où vous
+  choisissez **un** volet dans la liste, puis l'ordre — **Ouvrir**, **Stop**,
+  **Fermer** ou **Position** (saisissez alors la position voulue, de 0 à
+  100 %). Un message confirme l'ordre envoyé, par exemple « Volet salon :
+  fermeture ». Un seul widget suffit ainsi pour piloter chaque volet
+  séparément ;
 - les boutons **Tout ouvrir** / **Tout arrêter** / **Tout fermer** (la
   fermeture demande une confirmation). Le message indique combien de volets
   ont reçu l'ordre, et combien ont échoué.

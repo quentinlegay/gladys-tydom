@@ -77,7 +77,7 @@ haben: Ein nur erkanntes Gerät erscheint nicht.
 | --------------- | ---------------------------- | ---------------------------------------- |
 | Tydom-Gerät     | ein Gerät (Pflicht)          | alles eines Geräts sehen und steuern     |
 | Tydom-Rollladen | ein Rollladen (Pflicht)      | einen Rollladen steuern, genaue Position |
-| Tydom-Rollläden | Rollläden (alle wenn leer)   | das Haus im Überblick, alle auf/zu       |
+| Tydom-Rollläden | Rollläden (alle wenn leer)   | alle Rollläden, einzeln oder zusammen    |
 | Tydom-Batterien | nur schwache Batterien (aus) | die Batterien der Sensoren überwachen    |
 
 ### Tydom-Gerät
@@ -124,6 +124,12 @@ Alle Ihre Rollläden auf einen Blick:
 - die Rollläden nach Namen sortiert mit ihrem Zustand: **Geschlossen**,
   **Offen** oder die Position in % (höchstens 10, die übrigen als
   „+N weitere“ gezählt);
+- die Schaltfläche **Rollladen steuern…**: Sie öffnet ein Formular, in dem
+  Sie **einen** Rollladen aus der Liste wählen und dann den Befehl —
+  **Öffnen**, **Stopp**, **Schließen** oder **Position** (dann die gewünschte
+  Position von 0 bis 100 % eingeben). Eine Meldung bestätigt den gesendeten
+  Befehl, zum Beispiel „Wohnzimmer: schließt“. So genügt ein Widget, um jeden
+  Rollladen einzeln zu steuern;
 - die Schaltflächen **Alle öffnen** / **Alle stoppen** / **Alle schließen**
   (das Schließen fragt nach einer Bestätigung). Die Meldung nennt, wie viele
   Rollläden den Befehl erhalten haben und wie viele fehlgeschlagen sind.

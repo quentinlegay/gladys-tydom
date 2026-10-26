@@ -47,12 +47,12 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
 - **Dashboard widgets** (manifest `widgets`, all in
   `src/widgets.js`; user-facing description in `docs/*.md`):
 
-  | Key            | Settings               | Content                                                                   | Actions (`onWidgetAction`)                  | Refresh                       |
-  | -------------- | ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------- |
-  | `tydom_device` | `device` (select)      | ≤ 6 device-bound tiles, one 24 h chart, feature buttons                   | `setpoint_down` / `setpoint_up` (±0.5 °C)   | live (bound), TTL 300 s       |
-  | `shutter`      | `device` (select)      | position gauge, battery, 24 h stepline, open/stop/close, `Position…` form | `set_position` (`values.position`, 0-100)   | live + nudge on shutter state |
-  | `shutters`     | `devices` (multi, all) | open/closed counters, status list (≤ 10), "all" buttons                   | `open` / `stop` / `close` (close confirmed) | nudge on shutter state, 60 s  |
-  | `batteries`    | `only_low` (boolean)   | to-replace / tracked counters, status list worst first                    | —                                           | nudge on battery, 600 s       |
+  | Key            | Settings               | Content                                                                   | Actions (`onWidgetAction`)                                                                                   | Refresh                       |
+  | -------------- | ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+  | `tydom_device` | `device` (select)      | ≤ 6 device-bound tiles, one 24 h chart, feature buttons                   | `setpoint_down` / `setpoint_up` (±0.5 °C)                                                                    | live (bound), TTL 300 s       |
+  | `shutter`      | `device` (select)      | position gauge, battery, 24 h stepline, open/stop/close, `Position…` form | `set_position` (`values.position`, 0-100)                                                                    | live + nudge on shutter state |
+  | `shutters`     | `devices` (multi, all) | open/closed counters, status list (≤ 10), one-shutter form, "all" buttons | `control` (`values.shutter`, `values.order`, `values.position`), `open` / `stop` / `close` (close confirmed) | nudge on shutter state, 60 s  |
+  | `batteries`    | `only_low` (boolean)   | to-replace / tracked counters, status list worst first                    | —                                                                                                            | nudge on battery, 600 s       |
 
   The `build*` functions are pure (devices + last values -> content) and
   checked against `validateWidgetContent` in the tests. Device-bound

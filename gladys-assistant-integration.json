@@ -333,10 +333,10 @@
         "es": "Persianas Tydom"
       },
       "description": {
-        "en": "Position of every shutter, open or close them all at once.",
-        "fr": "Position de chaque volet, tout ouvrir ou tout fermer d'un geste.",
-        "de": "Position jedes Rollladens, alle auf einmal öffnen oder schließen.",
-        "es": "Posición de cada persiana, abrirlas o cerrarlas todas a la vez."
+        "en": "Every shutter at a glance, drive them one by one or all at once.",
+        "fr": "Tous les volets d'un coup d'œil, à piloter un par un ou tous ensemble.",
+        "de": "Alle Rollläden im Blick, einzeln oder alle zusammen steuern.",
+        "es": "Todas las persianas de un vistazo, una a una o todas a la vez."
       },
       "icon": "sun",
       "settings": [

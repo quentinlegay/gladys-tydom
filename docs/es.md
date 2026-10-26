@@ -72,12 +72,12 @@ elige uno de los cuatro widgets Tydom. Solo muestran los dispositivos Tydom
 añadidos en Gladys, con el nombre que les diste: un dispositivo solo
 descubierto no aparece.
 
-| Widget            | Ajustes                      | Para                                     |
-| ----------------- | ---------------------------- | ---------------------------------------- |
-| Dispositivo Tydom | un dispositivo (obligatorio) | ver y controlar todo de un dispositivo   |
-| Persiana Tydom    | una persiana (obligatorio)   | controlar una persiana, posición exacta  |
-| Persianas Tydom   | persianas (todas si vacío)   | la casa de un vistazo, abrir/cerrar todo |
-| Pilas Tydom       | solo pilas bajas (no)        | vigilar las pilas de los sensores        |
+| Widget            | Ajustes                      | Para                                    |
+| ----------------- | ---------------------------- | --------------------------------------- |
+| Dispositivo Tydom | un dispositivo (obligatorio) | ver y controlar todo de un dispositivo  |
+| Persiana Tydom    | una persiana (obligatorio)   | controlar una persiana, posición exacta |
+| Persianas Tydom   | persianas (todas si vacío)   | todas las persianas, una a una o juntas |
+| Pilas Tydom       | solo pilas bajas (no)        | vigilar las pilas de los sensores       |
 
 ### Dispositivo Tydom
 
@@ -121,6 +121,12 @@ Todas tus persianas de un vistazo:
 - cuántas persianas están **abiertas** (posición > 0 %) y **cerradas**;
 - las persianas ordenadas por nombre con su estado: **Cerrada**, **Abierta**
   o la posición en % (10 como máximo, las demás contadas como «+N más»);
+- el botón **Mover una persiana…**: abre un formulario en el que eliges
+  **una** persiana de la lista y luego la orden — **Abrir**, **Parar**,
+  **Cerrar** o **Posición** (escribe entonces la posición deseada, de 0 a
+  100 %). Un mensaje confirma la orden enviada, por ejemplo «Salón:
+  cerrando». Así basta un solo widget para controlar cada persiana por
+  separado;
 - los botones **Abrir todo** / **Parar todo** / **Cerrar todo** (cerrar pide
   una confirmación). El mensaje indica cuántas persianas recibieron la orden
   y cuántas fallaron.

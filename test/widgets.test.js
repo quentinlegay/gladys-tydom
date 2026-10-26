@@ -14,6 +14,7 @@ import {
   buildShutterWidget,
   buildShuttersWidget,
   registerWidgets,
+  shutterOrder,
 } from '../src/widgets.js';
 import {
   BOILER_ID,
@@ -222,6 +223,85 @@ test('shutters widget: positions, counters and the "all" buttons', async () => {
   });
   throttle.stop();
   bridge.stop();
+});
+
+test('shutters widget: the form drives ONE shutter, the order typed in it', async () => {
+  const { gladys, client, bridge, throttle, ids } = await setup();
+  const cover = ids(COVER_ID);
+  const result = await content(gladys, WIDGET_KEYS.SHUTTERS, { language: 'fr' });
+  const buttons = result.components.filter((c) => c.type === 'button');
+  assert.deepEqual(
+    buttons.map((b) => b.action.key),
+    ['control', 'open', 'stop', 'close'],
+  );
+  const [shutter, order, position] = buttons[0].action.fields;
+  assert.deepEqual(shutter.options, [
+    { value: cover.device, label: { en: 'Volet salon (Gladys)' } },
+  ]);
+  assert.deepEqual(
+    order.options.map((o) => o.value),
+    ['open', 'stop', 'close', 'position'],
+  );
+  assert.equal(position.required, false);
+
+  const act = (values) =>
+    gladys.fake.widgetAction(WIDGET_KEYS.SHUTTERS, 'control', {}, { settings: {}, values });
+
+  let ack = await act({ shutter: cover.device, order: 'stop' });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.deepEqual(client.publications.at(-1), {
+    topic: coverConfig.payload.command_topic,
+    payload: 'STOP',
+  });
+
+  ack = await act({ shutter: cover.device, order: 'position', position: 35 });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.deepEqual(client.publications.at(-1), {
+    topic: coverConfig.payload.set_position_topic,
+    payload: '35',
+  });
+
+  // Position order without a position: a message, nothing sent.
+  const before = client.publications.length;
+  ack = await act({ shutter: cover.device, order: 'position' });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.equal(client.publications.length, before);
+
+  // A core without widget forms relays no values: refused.
+  ack = await gladys.fake.widgetAction(WIDGET_KEYS.SHUTTERS, 'control', {}, { settings: {} });
+  assert.equal(ack.success, false);
+  // A shutter left out of the widget settings is refused.
+  ack = await gladys.fake.widgetAction(
+    WIDGET_KEYS.SHUTTERS,
+    'control',
+    {},
+    { settings: { devices: ['other'] }, values: { shutter: cover.device, order: 'open' } },
+  );
+  assert.equal(ack.success, false);
+  assert.equal(client.publications.length, before);
+  throttle.stop();
+  bridge.stop();
+});
+
+test('shutter orders: open / close fall back to the position, stop needs a state', () => {
+  const positionOnly = {
+    name: 'p',
+    external_id: 'p',
+    features: [{ external_id: 'p:pos', category: 'shutter', type: 'position' }],
+  };
+  assert.deepEqual(
+    ['open', 'close', 'stop'].map((o) => shutterOrder(positionOnly, o)?.value ?? null),
+    [100, 0, null],
+  );
+  assert.equal(shutterOrder(positionOnly, 'position', 140).value, 100);
+  const readOnly = {
+    ...positionOnly,
+    features: [{ ...positionOnly.features[0], read_only: true }],
+  };
+  assert.equal(shutterOrder(readOnly, 'open'), null);
+  const result = buildShuttersWidget([readOnly], new Map());
+  assert.deepEqual(validateWidgetContent(result), []);
+  assert.ok(!result.components.some((c) => c.action?.key === 'control'), 'nothing to drive');
 });
 
 test('shutters widget: a position change nudges a refresh', async () => {
