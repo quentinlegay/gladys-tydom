@@ -69,16 +69,15 @@ Lamellenneigung.
 ## Dashboard-Widgets
 
 Wählen Sie unter **Dashboard → Bearbeiten
-→ Widget hinzufügen** eines der vier Tydom-Widgets. Sie zeigen nur die in
+→ Widget hinzufügen** eines der drei Tydom-Widgets. Sie zeigen nur die in
 Gladys hinzugefügten Tydom-Geräte, unter dem Namen, den Sie ihnen gegeben
 haben: Ein nur erkanntes Gerät erscheint nicht.
 
-| Widget          | Einstellungen                | Wofür                                    |
-| --------------- | ---------------------------- | ---------------------------------------- |
-| Tydom-Gerät     | ein Gerät (Pflicht)          | alles eines Geräts sehen und steuern     |
-| Tydom-Rollladen | ein Rollladen (Pflicht)      | einen Rollladen steuern, genaue Position |
-| Tydom-Rollläden | Rollläden (alle wenn leer)   | das Haus im Überblick, alle auf/zu       |
-| Tydom-Batterien | nur schwache Batterien (aus) | die Batterien der Sensoren überwachen    |
+| Widget          | Einstellungen                | Wofür                                 |
+| --------------- | ---------------------------- | ------------------------------------- |
+| Tydom-Gerät     | ein Gerät (Pflicht)          | alles eines Geräts sehen und steuern  |
+| Tydom-Rollläden | Rollläden (alle wenn leer)   | alle Rollläden, einzeln oder zusammen |
+| Tydom-Batterien | nur schwache Batterien (aus) | die Batterien der Sensoren überwachen |
 
 ### Tydom-Gerät
 
@@ -98,24 +97,6 @@ Alles ist an die Gerätefunktionen gebunden: Werte und Diagramm folgen den
 Änderungen in Echtzeit. Wird das Gerät aus Gladys gelöscht, fordert das
 Widget Sie auf, ein anderes zu wählen.
 
-### Tydom-Rollladen
-
-Um **einen einzelnen Rollladen** vom Dashboard aus zu steuern:
-
-- die **Position** als Anzeige (0 % geschlossen, 100 % offen) und der
-  Batteriestand, falls vorhanden, live;
-- der **Positionsverlauf** über 24 Stunden;
-- die Schaltflächen **Öffnen** / **Stopp** / **Schließen**;
-- die Schaltfläche **Position…**: Sie öffnet ein kleines Formular mit der
-  aktuellen Position; geben Sie einen Wert zwischen 0 und 100 % ein und
-  bestätigen Sie, um den Rollladen dorthin zu fahren. Eine Meldung bestätigt
-  den gesendeten Befehl.
-
-Die Schaltfläche **Position…** erscheint nur bei Rollläden, deren
-Tydom-Gateway eine Position annimmt (übliche motorisierte Rollläden). Ist das gewählte
-Gerät kein Rollladen, zeigt das Widget dies an. Fügen Sie ein Widget pro zu
-steuerndem Rollladen hinzu.
-
 ### Tydom-Rollläden
 
 Alle Ihre Rollläden auf einen Blick:
@@ -124,6 +105,12 @@ Alle Ihre Rollläden auf einen Blick:
 - die Rollläden nach Namen sortiert mit ihrem Zustand: **Geschlossen**,
   **Offen** oder die Position in % (höchstens 10, die übrigen als
   „+N weitere“ gezählt);
+- die Schaltfläche **Rollladen steuern…**: Sie öffnet ein Formular, in dem
+  Sie **einen** Rollladen aus der Liste wählen und dann den Befehl —
+  **Öffnen**, **Stopp**, **Schließen** oder **Position** (dann die gewünschte
+  Position von 0 bis 100 % eingeben). Eine Meldung bestätigt den gesendeten
+  Befehl, zum Beispiel „Wohnzimmer: schließt“. So genügt ein Widget, um jeden
+  Rollladen einzeln zu steuern;
 - die Schaltflächen **Alle öffnen** / **Alle stoppen** / **Alle schließen**
   (das Schließen fragt nach einer Bestätigung). Die Meldung nennt, wie viele
   Rollläden den Befehl erhalten haben und wie viele fehlgeschlagen sind.
@@ -149,7 +136,7 @@ zeigt dann „Alle Batterien sind in Ordnung.“).
 ### Gut zu wissen
 
 - Die widgeteigenen Schaltflächen (**Alle öffnen**/**Alle stoppen**/**Alle
-  schließen**, **Position…**, **±0,5 °C**) prüfen zuerst den MQTT-Broker:
+  schließen**, **Rollladen steuern…**, **±0,5 °C**) prüfen zuerst den MQTT-Broker:
   Ist er getrennt, meldet eine Nachricht dies, statt den Befehl zu senden.
 - Tydom-Rollläden melden nur ihre Position: Einen Zustand „in Bewegung“ gibt
   es nicht, die Position wird aktualisiert, wenn der Rollladen anhält.

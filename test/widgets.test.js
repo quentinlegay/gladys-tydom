@@ -11,14 +11,13 @@ import {
   WIDGET_KEYS,
   buildBatteriesWidget,
   buildDeviceWidget,
-  buildShutterWidget,
   buildShuttersWidget,
   registerWidgets,
+  shutterOrder,
 } from '../src/widgets.js';
 import {
   BOILER_ID,
   COVER_ID,
-  LIGHT_ID,
   climateConfig,
   coverBatteryConfig,
   coverConfig,
@@ -139,67 +138,6 @@ test('device widget: the setpoint buttons move the thermostat by half a degree',
   bridge.stop();
 });
 
-test('shutter widget: live position, open / stop / close and a position form', async () => {
-  const { gladys, client, bridge, throttle, ids } = await setup();
-  const cover = ids(COVER_ID);
-  client.receive(coverConfig.payload.position_topic, '40');
-  await flush();
-
-  const result = await content(gladys, WIDGET_KEYS.SHUTTER, { settings: { device: cover.device } });
-  assert.deepEqual(
-    result.components.map((c) => c.type),
-    ['gauge', 'value', 'chart', 'button', 'button', 'button', 'button'],
-  );
-  const buttons = result.components.filter((c) => c.type === 'button');
-  assert.deepEqual(
-    buttons.slice(0, 3).map((b) => b.value),
-    [COVER_STATE.OPEN, COVER_STATE.STOP, COVER_STATE.CLOSE],
-  );
-  const form = buttons[3].action;
-  assert.equal(form.key, 'set_position');
-  assert.deepEqual(
-    form.fields.map((f) => [f.key, f.min, f.max, f.default]),
-    [['position', 0, 100, 40]],
-  );
-
-  const ack = await gladys.fake.widgetAction(
-    WIDGET_KEYS.SHUTTER,
-    'set_position',
-    {},
-    { settings: { device: cover.device }, values: { position: 65 } },
-  );
-  assert.ok(ack.success, JSON.stringify(ack));
-  assert.deepEqual(client.publications.at(-1), {
-    topic: coverConfig.payload.set_position_topic,
-    payload: '65',
-  });
-  throttle.stop();
-  bridge.stop();
-});
-
-test('shutter widget: refuses an action without values or on a non-shutter', async () => {
-  const { gladys, client, bridge, throttle, ids } = await setup();
-  const cover = ids(COVER_ID);
-  const before = client.publications.length;
-  const noValues = await gladys.fake.widgetAction(
-    WIDGET_KEYS.SHUTTER,
-    'set_position',
-    {},
-    { settings: { device: cover.device } },
-  );
-  assert.equal(noValues.success, false);
-  assert.equal(client.publications.length, before);
-
-  const light = ids(LIGHT_ID);
-  const result = await content(gladys, WIDGET_KEYS.SHUTTER, { settings: { device: light.device } });
-  assert.deepEqual(
-    result.components.map((c) => c.type),
-    ['text'],
-  );
-  throttle.stop();
-  bridge.stop();
-});
-
 test('shutters widget: positions, counters and the "all" buttons', async () => {
   const { gladys, client, bridge, throttle } = await setup();
   client.receive(coverConfig.payload.position_topic, '40');
@@ -224,12 +162,91 @@ test('shutters widget: positions, counters and the "all" buttons', async () => {
   bridge.stop();
 });
 
+test('shutters widget: the form drives ONE shutter, the order typed in it', async () => {
+  const { gladys, client, bridge, throttle, ids } = await setup();
+  const cover = ids(COVER_ID);
+  const result = await content(gladys, WIDGET_KEYS.SHUTTERS, { language: 'fr' });
+  const buttons = result.components.filter((c) => c.type === 'button');
+  assert.deepEqual(
+    buttons.map((b) => b.action.key),
+    ['control', 'open', 'stop', 'close'],
+  );
+  const [shutter, order, position] = buttons[0].action.fields;
+  assert.deepEqual(shutter.options, [
+    { value: cover.device, label: { en: 'Volet salon (Gladys)' } },
+  ]);
+  assert.deepEqual(
+    order.options.map((o) => o.value),
+    ['open', 'stop', 'close', 'position'],
+  );
+  assert.equal(position.required, false);
+
+  const act = (values) =>
+    gladys.fake.widgetAction(WIDGET_KEYS.SHUTTERS, 'control', {}, { settings: {}, values });
+
+  let ack = await act({ shutter: cover.device, order: 'stop' });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.deepEqual(client.publications.at(-1), {
+    topic: coverConfig.payload.command_topic,
+    payload: 'STOP',
+  });
+
+  ack = await act({ shutter: cover.device, order: 'position', position: 35 });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.deepEqual(client.publications.at(-1), {
+    topic: coverConfig.payload.set_position_topic,
+    payload: '35',
+  });
+
+  // Position order without a position: a message, nothing sent.
+  const before = client.publications.length;
+  ack = await act({ shutter: cover.device, order: 'position' });
+  assert.ok(ack.success, JSON.stringify(ack));
+  assert.equal(client.publications.length, before);
+
+  // A core without widget forms relays no values: refused.
+  ack = await gladys.fake.widgetAction(WIDGET_KEYS.SHUTTERS, 'control', {}, { settings: {} });
+  assert.equal(ack.success, false);
+  // A shutter left out of the widget settings is refused.
+  ack = await gladys.fake.widgetAction(
+    WIDGET_KEYS.SHUTTERS,
+    'control',
+    {},
+    { settings: { devices: ['other'] }, values: { shutter: cover.device, order: 'open' } },
+  );
+  assert.equal(ack.success, false);
+  assert.equal(client.publications.length, before);
+  throttle.stop();
+  bridge.stop();
+});
+
+test('shutter orders: open / close fall back to the position, stop needs a state', () => {
+  const positionOnly = {
+    name: 'p',
+    external_id: 'p',
+    features: [{ external_id: 'p:pos', category: 'shutter', type: 'position' }],
+  };
+  assert.deepEqual(
+    ['open', 'close', 'stop'].map((o) => shutterOrder(positionOnly, o)?.value ?? null),
+    [100, 0, null],
+  );
+  assert.equal(shutterOrder(positionOnly, 'position', 140).value, 100);
+  const readOnly = {
+    ...positionOnly,
+    features: [{ ...positionOnly.features[0], read_only: true }],
+  };
+  assert.equal(shutterOrder(readOnly, 'open'), null);
+  const result = buildShuttersWidget([readOnly], new Map());
+  assert.deepEqual(validateWidgetContent(result), []);
+  assert.ok(!result.components.some((c) => c.action?.key === 'control'), 'nothing to drive');
+});
+
 test('shutters widget: a position change nudges a refresh', async () => {
   const { gladys, client, bridge, throttle } = await setup();
   client.receive(coverConfig.payload.position_topic, '70');
   client.receive(lightConfig.payload.state_topic, '50');
   await flush();
-  assert.deepEqual(gladys.fake.widgetRefreshes.sort(), [WIDGET_KEYS.SHUTTER, WIDGET_KEYS.SHUTTERS]);
+  assert.deepEqual(gladys.fake.widgetRefreshes, [WIDGET_KEYS.SHUTTERS]);
   throttle.stop();
   bridge.stop();
 });
@@ -289,7 +306,6 @@ test('the status lists stay within the content budget', () => {
 test('empty states are valid contents', () => {
   for (const result of [
     buildDeviceWidget(undefined),
-    buildShutterWidget(undefined),
     buildShuttersWidget([], new Map()),
     buildBatteriesWidget([], new Map()),
   ]) {

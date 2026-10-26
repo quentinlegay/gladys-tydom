@@ -7,6 +7,19 @@ workflow turns the `Unreleased` section into the new version when it bumps it.
 
 ## [Unreleased]
 
+### Added
+
+- **Tydom shutters** widget: a **Control a shutter…** button opens a form to
+  pick one shutter in a list and send it an order — open, stop, close or an
+  exact position (0-100 %). Every shutter can now be driven separately from
+  this single widget, next to the "all" buttons.
+
+### Removed
+
+- **Tydom shutter** widget (one widget per shutter), added in 2.2.1: use the
+  **Control a shutter…** button of the **Tydom shutters** widget instead.
+  Delete the Tydom shutter widgets from your dashboards.
+
 ## [2.2.1] - 2026-10-26
 
 ### Added

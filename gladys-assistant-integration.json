@@ -295,36 +295,6 @@
       ]
     },
     {
-      "key": "shutter",
-      "label": {
-        "en": "Tydom shutter",
-        "fr": "Volet Tydom",
-        "de": "Tydom-Rollladen",
-        "es": "Persiana Tydom"
-      },
-      "description": {
-        "en": "Drive one shutter: open, stop, close or move it to an exact position.",
-        "fr": "Pilotez un volet : ouvrir, arrêter, fermer ou l'amener à une position précise.",
-        "de": "Einen Rollladen steuern: öffnen, stoppen, schließen oder auf eine genaue Position fahren.",
-        "es": "Controla una persiana: abrir, parar, cerrar o llevarla a una posición exacta."
-      },
-      "icon": "sun",
-      "settings": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": {
-            "en": "Shutter",
-            "fr": "Volet",
-            "de": "Rollladen",
-            "es": "Persiana"
-          },
-          "required": true
-        }
-      ]
-    },
-    {
       "key": "shutters",
       "label": {
         "en": "Tydom shutters",
@@ -333,10 +303,10 @@
         "es": "Persianas Tydom"
       },
       "description": {
-        "en": "Position of every shutter, open or close them all at once.",
-        "fr": "Position de chaque volet, tout ouvrir ou tout fermer d'un geste.",
-        "de": "Position jedes Rollladens, alle auf einmal öffnen oder schließen.",
-        "es": "Posición de cada persiana, abrirlas o cerrarlas todas a la vez."
+        "en": "Every shutter at a glance, drive them one by one or all at once.",
+        "fr": "Tous les volets d'un coup d'œil, à piloter un par un ou tous ensemble.",
+        "de": "Alle Rollläden im Blick, einzeln oder alle zusammen steuern.",
+        "es": "Todas las persianas de un vistazo, una a una o todas a la vez."
       },
       "icon": "sun",
       "settings": [
