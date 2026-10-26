@@ -32,7 +32,9 @@ Tydom gateway <──> tydom2mqtt (sub-container) <──> MQTT broker <──> 
   Gladys features, and groups them per Tydom endpoint (one Gladys device per
   shutter, light…). No tydom2mqtt topic layout is hard-coded.
 - **States and commands go through the broker.** State messages are forwarded
-  with `publishState`; Gladys commands are published on the command topics
+  with `publishChangedStates`: tydom2mqtt republishes every state at each
+  Tydom poll, only the changed values reach Gladys (300 states/min limit),
+  plus an unchanged one every 30 min. Gladys commands are published on the command topics
   announced by the discovery.
 - **Watchdog.** tydom2mqtt can lose the Tydom websocket for good (the
   gateway closes it, its reconnect task dies) while its process and MQTT
@@ -121,8 +123,15 @@ npx github:GladysAssistant/integration-store .   # store admission rules
 2. Replace the owner in `docker_image` and `cover_image` of
    `gladys-assistant-integration.json` with your GitHub account, and replace
    `cover.png` with a real 800×534 px cover.
-3. Run **Actions → Release → Run workflow**: it bumps the version, tags and
-   builds the multi-arch image to `ghcr.io`. Make the package public.
+3. Run **Actions → Release → Run workflow**: it bumps the version, tags,
+   builds the multi-arch image to `ghcr.io`, and only then pushes the bumped
+   manifest to the branch (the store drops an integration whose image cannot
+   be pulled) and runs the store validator with the image check. Make the
+   package public.
+
+The CI runs the store validator on every push and pull request
+(`npx github:GladysAssistant/integration-store --skip-image-check`); run it
+locally before publishing.
 
 To upgrade tydom2mqtt, bump the tag of the `tydom2mqtt` sub-container in the
 manifest.

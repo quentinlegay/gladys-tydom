@@ -8,8 +8,14 @@
 #   2. writes it into `package.json`, `package-lock.json` AND the manifest
 #      (`gladys-assistant-integration.json`: both `version` and the
 #      `docker_image` tag, so the indexer and the image stay in lockstep);
-#   3. commits the bump and pushes the `vX.Y.Z` tag;
-#   4. calls build.yml to publish the multi-arch image (`:X.Y.Z` + `:latest`).
+#   3. commits the bump and pushes ONLY the `vX.Y.Z` tag;
+#   4. calls build.yml to publish the multi-arch image (`:X.Y.Z` + `:latest`);
+#   5. then pushes the bump commit to the branch and runs the store validator
+#      with the image check.
+#
+# Why this order: the store indexes the manifest of the default branch and
+# drops the integration while its `docker_image` cannot be pulled. The image
+# must be published BEFORE the manifest referencing it reaches the branch.
 #
 # Why call build.yml instead of relying on the tag push: a tag pushed with the
 # default GITHUB_TOKEN does NOT trigger other workflows, so we invoke the build
@@ -73,11 +79,9 @@ jobs:
 
           echo "version=${new_version}" >> "$GITHUB_OUTPUT"
 
-      # Note: if the branch you release from is protected against direct pushes,
-      # GitHub rejects the push below (the default GITHUB_TOKEN cannot bypass
-      # branch protection). Allow GitHub Actions to bypass the rule, or release
-      # from an unprotected branch.
-      - name: Commit, tag and push
+      # The bump commit only travels with the tag for now: the branch gets it
+      # once the image is published (publish-manifest job).
+      - name: Commit, tag and push the tag
         env:
           VERSION: ${{ steps.bump.outputs.version }}
         run: |
@@ -89,7 +93,6 @@ jobs:
           git commit -m "chore(release): ${VERSION}"
           git tag -a "v${VERSION}" -m "Release ${VERSION}"
 
-          git push origin "HEAD:${GITHUB_REF_NAME}"
           git push origin "v${VERSION}"
 
   # Build and publish the image for the version we just tagged.
@@ -101,3 +104,35 @@ jobs:
       packages: write
     with:
       version: ${{ needs.prepare.outputs.version }}
+
+  # The image exists now: let the manifest that references it reach the branch.
+  # Note: if the branch is protected against direct pushes, GitHub rejects
+  # this push (the default GITHUB_TOKEN cannot bypass branch protection).
+  # Allow GitHub Actions to bypass the rule, or release from an unprotected
+  # branch. A commit landed on the branch during the build makes the push
+  # non-fast-forward: merge the tag into the branch by hand then.
+  publish-manifest:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the bump commit to the branch
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.prepare.outputs.version }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Push the bump commit to the branch
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: git push origin "HEAD:refs/heads/${BRANCH}"
+
+      # Same checks as the hourly store indexer, image existence included.
+      - name: Validate against the store rules (images included)
+        run: npx --yes github:GladysAssistant/integration-store
