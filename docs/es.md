@@ -16,7 +16,7 @@ Tydom y publica tus dispositivos en tu broker MQTT. La integración los lee en
 el broker y envía tus órdenes a través de él.
 
 Necesitas un broker MQTT accesible desde Gladys, por ejemplo el broker
-Mosquitto instalado por la integración MQTT de Gladys.
+Mosquitto instalado por la integración MQTT de Gladys. La integración requiere Gladys 5.3.0 o posterior.
 
 ## Configuración
 
@@ -67,21 +67,86 @@ las lamas.
 
 ## Widgets del panel
 
-Requiere Gladys 5.1.0 o posterior. En **Panel → Editar → Añadir un widget**,
-elige uno de los widgets Tydom. Solo muestran los dispositivos Tydom añadidos
-en Gladys, con el nombre que les diste.
+En **Panel → Editar → Añadir un widget**,
+elige uno de los cuatro widgets Tydom. Solo muestran los dispositivos Tydom
+añadidos en Gladys, con el nombre que les diste: un dispositivo solo
+descubierto no aparece.
 
-- **Dispositivo Tydom** — un dispositivo a elegir: sus valores en directo
-  (posición, brillo, consigna, temperatura, potencia, pila…), un gráfico del
-  historial de 24 h y sus mandos (abrir / parar / cerrar una persiana,
-  encender o apagar una luz o un portón, consigna ±0,5 °C en un termostato).
-- **Persianas Tydom** — la posición de cada persiana, cuántas están abiertas
-  o cerradas, y los botones **Abrir todo** / **Parar todo** / **Cerrar todo**
-  (cerrar pide una confirmación). Se puede limitar a algunas persianas.
-- **Pilas Tydom** — el nivel de pila de cada sensor Tydom, las más bajas
-  primero: en rojo al 15 % o menos (o si el dispositivo indica un fallo de
-  pila), en naranja al 30 % o menos. El ajuste **Solo pilas bajas** oculta
-  las que están bien.
+| Widget            | Ajustes                      | Para                                     |
+| ----------------- | ---------------------------- | ---------------------------------------- |
+| Dispositivo Tydom | un dispositivo (obligatorio) | ver y controlar todo de un dispositivo   |
+| Persiana Tydom    | una persiana (obligatorio)   | controlar una persiana, posición exacta  |
+| Persianas Tydom   | persianas (todas si vacío)   | la casa de un vistazo, abrir/cerrar todo |
+| Pilas Tydom       | solo pilas bajas (no)        | vigilar las pilas de los sensores        |
+
+### Dispositivo Tydom
+
+Un dispositivo a elegir, sea cual sea:
+
+- **Valores en directo** (hasta 6): posición de una persiana y brillo de una
+  luz en indicador, luego consigna, temperatura, humedad, potencia, energía,
+  corriente, tensión, movimiento y pila.
+- **Gráfico de las últimas 24 h** de la medida más útil: temperatura, si no
+  potencia, humedad, posición de la persiana o brillo. Ausente si el
+  historial de la funcionalidad está desactivado en Gladys.
+- **Mandos**: **Abrir** / **Parar** / **Cerrar** para una persiana,
+  **Encender** / **Apagar** para una luz o un portón, **−0,5 °C** /
+  **+0,5 °C** para un termostato (la consigna queda dentro del mín/máx del
+  dispositivo).
+
+Todo está vinculado a las funcionalidades del dispositivo: los valores y el
+gráfico siguen los cambios en tiempo real. Si el dispositivo se elimina de
+Gladys, el widget te invita a elegir otro.
+
+### Persiana Tydom
+
+Para controlar **una sola persiana** desde el panel:
+
+- la **posición** en indicador (0 % cerrada, 100 % abierta) y el nivel de
+  pila si la persiana tiene, en directo;
+- el **historial de la posición** de 24 h;
+- los botones **Abrir** / **Parar** / **Cerrar**;
+- el botón **Posición…**: abre un pequeño formulario con la posición actual;
+  escribe un valor entre 0 y 100 % y confirma para llevar la persiana a esa
+  posición. Un mensaje confirma la orden enviada.
+
+El botón **Posición…** solo aparece en las persianas cuya pasarela Tydom
+acepta una posición (las persianas motorizadas habituales). Si el dispositivo elegido no es una persiana, el widget lo indica. Añade un
+widget por persiana que quieras controlar.
+
+### Persianas Tydom
+
+Todas tus persianas de un vistazo:
+
+- cuántas persianas están **abiertas** (posición > 0 %) y **cerradas**;
+- las persianas ordenadas por nombre con su estado: **Cerrada**, **Abierta**
+  o la posición en % (10 como máximo, las demás contadas como «+N más»);
+- los botones **Abrir todo** / **Parar todo** / **Cerrar todo** (cerrar pide
+  una confirmación). El mensaje indica cuántas persianas recibieron la orden
+  y cuántas fallaron.
+
+El ajuste **Persianas** limita el widget a algunas persianas (por estancia,
+por planta…): vacío, las toma todas, incluidas las añadidas más tarde. La
+lista se actualiza unos segundos después de cada movimiento.
+
+### Pilas Tydom
+
+El nivel de pila de cada dispositivo Tydom con pilas, las más bajas primero:
+
+- cuántas pilas hay **a cambiar** y cuántas están **vigiladas**;
+- la lista: en rojo al 15 % o menos (o si el dispositivo indica un fallo de
+  pila), en naranja al 30 % o menos, en verde por encima.
+
+El ajuste **Solo pilas bajas** oculta las que están bien (el widget muestra
+entonces «Todas las pilas están bien.»).
+
+### Conviene saber
+
+- Los botones propios de los widgets (**Abrir todo**/**Parar todo**/**Cerrar
+  todo**, **Posición…**, **±0,5 °C**) comprueban primero el broker MQTT: si
+  está desconectado, un mensaje lo indica en lugar de enviar la orden.
+- Las persianas Tydom solo informan de su posición: no existe un estado «en
+  movimiento», la posición se actualiza cuando la persiana se detiene.
 
 ## Solución de problemas
 

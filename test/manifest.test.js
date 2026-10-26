@@ -42,6 +42,19 @@ test('every manifest widget has its handlers, and the core knows widgets', () =>
   }
 });
 
+test('catalog keywords: 1-10 search terms of 2-30 chars, Gladys >= 5.3.0', () => {
+  // Never displayed, only matched by the store search. Older cores reject the
+  // unknown field: the store refuses a manifest whose floor is below 5.3.0.
+  const { keywords } = manifest;
+  assert.ok(Array.isArray(keywords) && keywords.length >= 1 && keywords.length <= 10);
+  for (const keyword of keywords) {
+    assert.ok(keyword.length >= 2 && keyword.length <= 30, `keyword "${keyword}" is 2-30 chars`);
+  }
+  assert.equal(new Set(keywords).size, keywords.length, 'no duplicate keyword');
+  const [, major, minor] = manifest.gladys_version.match(/>=\s*(\d+)\.(\d+)\.\d+/).map(Number);
+  assert.ok(major > 5 || (major === 5 && minor >= 3), 'keywords require gladys_version >= 5.3.0');
+});
+
 test('declaring catalog categories requires Gladys >= 4.86.0', () => {
   // The store vocabulary itself is checked by the store validator (unknown
   // keys are dropped with a warning there) — what this test pins is the

@@ -3,7 +3,8 @@
 //
 // The integration connects to the same broker as tydom2mqtt and:
 //   - reads the (retained) discovery messages to know the Tydom devices;
-//   - forwards every state message to Gladys with `publishState`;
+//   - forwards the state values that changed to Gladys
+//     (`publishChangedStates`);
 //   - turns Gladys commands into tydom2mqtt command messages.
 // -----------------------------------------------------------------------------
 
@@ -19,6 +20,11 @@ const logger = createLogger({ name: 'bridge' });
 // Discovery messages arrive in bursts (one per entity): wait for the burst to
 // end before re-publishing the devices to Gladys.
 const DEVICES_DEBOUNCE_MS = 3000;
+
+// tydom2mqtt republishes every state at each Tydom poll: only the changed
+// values go to Gladys (300 states/min limit), an unchanged one every 30 min so
+// it stays recently dated.
+const STATE_HEARTBEAT_MS = 30 * 60 * 1000;
 
 /**
  * Events:
@@ -134,10 +140,14 @@ export class TydomBridge extends EventEmitter {
       if (value === null) continue;
       this.recordValue(feature, value);
       try {
-        await this.gladys.publishState(feature.externalId, value);
+        // A feature not added in Gladys yet is dropped by Gladys; the SDK
+        // re-sends its value once the user creates the device.
+        await this.gladys.publishChangedStates(
+          [{ device_feature_external_id: feature.externalId, state: value }],
+          { heartbeat: STATE_HEARTBEAT_MS },
+        );
       } catch (err) {
-        // Typically: the device has not been added in Gladys yet.
-        logger.debug(`publishState ${feature.externalId} refused: ${err.message}`);
+        logger.debug(`State ${feature.externalId} not published: ${err.message}`);
       }
     }
   }

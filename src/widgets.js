@@ -3,6 +3,8 @@
 //
 //   - tydom_device : one Tydom device — live tiles, its controls, a history
 //                    chart (everything bound to the Gladys device features);
+//   - shutter      : ONE shutter — its position, open / stop / close it, and
+//                    move it to an exact position;
 //   - shutters     : every shutter at a glance, open / stop / close them all;
 //   - batteries    : the battery level of every Tydom sensor, worst first.
 //
@@ -28,6 +30,7 @@ const logger = createLogger({ name: 'widgets' });
 
 export const WIDGET_KEYS = {
   DEVICE: 'tydom_device',
+  SHUTTER: 'shutter',
   SHUTTERS: 'shutters',
   BATTERIES: 'batteries',
 };
@@ -65,6 +68,13 @@ const T = {
   toReplace: { en: 'To replace', fr: 'À changer', de: 'Zu ersetzen', es: 'A cambiar' },
   tracked: { en: 'Tracked', fr: 'Suivies', de: 'Überwacht', es: 'Vigiladas' },
   position: { en: 'Position', fr: 'Position', de: 'Position', es: 'Posición' },
+  positionPercent: {
+    en: 'Position (%)',
+    fr: 'Position (%)',
+    de: 'Position (%)',
+    es: 'Posición (%)',
+  },
+  setPosition: { en: 'Position…', fr: 'Position…', de: 'Position…', es: 'Posición…' },
   brightness: { en: 'Brightness', fr: 'Luminosité', de: 'Helligkeit', es: 'Brillo' },
   setpoint: { en: 'Setpoint', fr: 'Consigne', de: 'Sollwert', es: 'Consigna' },
   temperature: { en: 'Temperature', fr: 'Température', de: 'Temperatur', es: 'Temperatura' },
@@ -86,6 +96,12 @@ const T = {
     fr: "Aucun volet Tydom n'est encore ajouté dans Gladys.",
     de: 'Noch kein Tydom-Rollladen in Gladys hinzugefügt.',
     es: 'Todavía no hay ninguna persiana Tydom añadida en Gladys.',
+  },
+  notAShutter: {
+    en: 'This device is not a Tydom shutter: pick a shutter in the widget settings.',
+    fr: "Cet appareil n'est pas un volet Tydom : choisissez un volet dans les réglages du widget.",
+    de: 'Dieses Gerät ist kein Tydom-Rollladen: Wählen Sie in den Widget-Einstellungen einen Rollladen.',
+    es: 'Este dispositivo no es una persiana Tydom: elige una persiana en los ajustes del widget.',
   },
   noBattery: {
     en: 'No battery-powered Tydom device in Gladys.',
@@ -170,35 +186,32 @@ const CHARTS = [
   [CATEGORIES.LIGHT, TYPES.LIGHT.BRIGHTNESS, CHART_TYPES.STEPLINE],
 ];
 
+/** Open / stop / close buttons bound to a shutter `state` feature. */
+function shutterButtons(state) {
+  const id = state.external_id;
+  return [
+    {
+      type: 'button',
+      label: T.open,
+      icon: 'chevrons-up',
+      device_feature: id,
+      value: COVER_STATE.OPEN,
+    },
+    { type: 'button', label: T.stop, icon: 'square', device_feature: id, value: COVER_STATE.STOP },
+    {
+      type: 'button',
+      label: T.close,
+      icon: 'chevrons-down',
+      device_feature: id,
+      value: COVER_STATE.CLOSE,
+    },
+  ];
+}
+
 function deviceButtons(device) {
   const buttons = [];
   const shutter = findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.STATE);
-  if (shutter) {
-    const id = shutter.external_id;
-    buttons.push(
-      {
-        type: 'button',
-        label: T.open,
-        icon: 'chevrons-up',
-        device_feature: id,
-        value: COVER_STATE.OPEN,
-      },
-      {
-        type: 'button',
-        label: T.stop,
-        icon: 'square',
-        device_feature: id,
-        value: COVER_STATE.STOP,
-      },
-      {
-        type: 'button',
-        label: T.close,
-        icon: 'chevrons-down',
-        device_feature: id,
-        value: COVER_STATE.CLOSE,
-      },
-    );
-  }
+  if (shutter) buttons.push(...shutterButtons(shutter));
   const binary =
     findFeature(device, CATEGORIES.LIGHT, TYPES.LIGHT.BINARY) ??
     findFeature(device, CATEGORIES.SWITCH, TYPES.SWITCH.BINARY);
@@ -271,6 +284,86 @@ export function buildDeviceWidget(device) {
   return { ttl_seconds: 300, components };
 }
 
+// --- Shutter (one) -------------------------------------------------------------
+
+function isShutter(device) {
+  return Boolean(
+    findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.STATE) ||
+    findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.POSITION),
+  );
+}
+
+/** The position feature a `shutter` widget can drive, if any. */
+function settablePosition(device) {
+  const feature = findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.POSITION);
+  return feature && !feature.read_only ? feature : null;
+}
+
+/**
+ * Content of the `shutter` widget: the position gauge and chart are bound to
+ * the device features (live); the "Position…" button opens a 0-100 % form
+ * pre-filled with the last position received.
+ */
+export function buildShutterWidget(device, values = new Map()) {
+  if (!device) {
+    return {
+      ttl_seconds: 300,
+      components: [{ type: 'text', variant: TEXT_VARIANTS.BODY, text: T.deviceMissing }],
+    };
+  }
+  if (!isShutter(device)) {
+    return {
+      ttl_seconds: 300,
+      components: [{ type: 'text', variant: TEXT_VARIANTS.BODY, text: T.notAShutter }],
+    };
+  }
+  const components = [];
+  const position = findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.POSITION);
+  if (position) {
+    components.push({ type: 'gauge', label: T.position, device_feature: position.external_id });
+  }
+  const battery = findFeature(device, CATEGORIES.BATTERY, TYPES.BATTERY.INTEGER);
+  if (battery) {
+    components.push({ type: 'value', label: T.battery, device_feature: battery.external_id });
+  }
+  if (position && position.keep_history !== false) {
+    components.push({
+      type: 'chart',
+      chart_type: CHART_TYPES.STEPLINE,
+      device_features: [position.external_id],
+      interval: CHART_INTERVALS.LAST_DAY,
+    });
+  }
+  const state = findFeature(device, CATEGORIES.SHUTTER, TYPES.SHUTTER.STATE);
+  if (state) components.push(...shutterButtons(state));
+  const settable = settablePosition(device);
+  if (settable) {
+    const current = currentValue(settable, values);
+    components.push({
+      type: 'button',
+      label: T.setPosition,
+      icon: 'sliders',
+      style: BUTTON_STYLES.PRIMARY,
+      action: {
+        key: 'set_position',
+        fields: [
+          {
+            key: 'position',
+            type: 'number',
+            label: T.positionPercent,
+            required: true,
+            min: 0,
+            max: 100,
+            ...(current !== null && { default: Math.round(current) }),
+          },
+        ],
+      },
+    });
+  }
+  // The form default is the only inline value: re-pulled on position changes.
+  return { ttl_seconds: 300, components };
+}
+
 // --- Shutters -----------------------------------------------------------------
 
 /** The shutters a `shutters` widget instance shows, sorted by name. */
@@ -281,11 +374,7 @@ export function selectShutters(devices, settings = {}) {
       : null;
   return devices
     .filter((d) => !chosen || chosen.has(d.external_id))
-    .filter(
-      (d) =>
-        findFeature(d, CATEGORIES.SHUTTER, TYPES.SHUTTER.STATE) ||
-        findFeature(d, CATEGORIES.SHUTTER, TYPES.SHUTTER.POSITION),
-    )
+    .filter(isShutter)
     .sort(byName);
 }
 
@@ -454,12 +543,13 @@ export class RefreshThrottle {
   }
 }
 
-// Which inline-value widget shows a feature category (the device widget is
-// bound to the features: it needs no nudge).
+// Which inline-value widgets show a feature category (the device widget is
+// bound to the features: it needs no nudge; the shutter one only for the
+// default of its position form).
 const REFRESHED_BY_CATEGORY = {
-  [CATEGORIES.SHUTTER]: WIDGET_KEYS.SHUTTERS,
-  [CATEGORIES.BATTERY]: WIDGET_KEYS.BATTERIES,
-  [CATEGORIES.BATTERY_LOW]: WIDGET_KEYS.BATTERIES,
+  [CATEGORIES.SHUTTER]: [WIDGET_KEYS.SHUTTERS, WIDGET_KEYS.SHUTTER],
+  [CATEGORIES.BATTERY]: [WIDGET_KEYS.BATTERIES],
+  [CATEGORIES.BATTERY_LOW]: [WIDGET_KEYS.BATTERIES],
 };
 
 // --- Wiring -------------------------------------------------------------------
@@ -501,6 +591,39 @@ export function registerWidgets(gladys, bridge, options = {}) {
         es: 'Consigna: {t} °C',
       },
       { t: target },
+    );
+  });
+
+  gladys.onWidgetGet(WIDGET_KEYS.SHUTTER, async ({ settings }) => {
+    const devices = await gladys.getDevices();
+    return buildShutterWidget(
+      devices.find((d) => d.external_id === settings.device),
+      bridge.values,
+    );
+  });
+
+  gladys.onWidgetAction(WIDGET_KEYS.SHUTTER, async (actionKey, _params, { settings, values }) => {
+    if (actionKey !== 'set_position') throw new Error(`Unknown action ${actionKey}`);
+    // An older core drops the `fields` and relays the action without values.
+    const target = Number(values?.position);
+    if (values?.position === undefined || !Number.isFinite(target)) {
+      throw new Error('No position received: update Gladys to set a position');
+    }
+    const devices = await gladys.getDevices();
+    const device = devices.find((d) => d.external_id === settings.device);
+    const feature = device && settablePosition(device);
+    if (!feature) throw new Error('This device has no settable position');
+    if (!bridge.connected) return T.notConnected;
+    const position = Math.round(Math.min(100, Math.max(0, target)));
+    await bridge.setValue(feature.external_id, position);
+    return format(
+      {
+        en: '{name}: {p} %',
+        fr: '{name} : {p} %',
+        de: '{name}: {p} %',
+        es: '{name}: {p} %',
+      },
+      { name: device.name, p: position },
     );
   });
 
@@ -550,8 +673,9 @@ export function registerWidgets(gladys, bridge, options = {}) {
   );
 
   bridge.on('state', (feature) => {
-    const key = REFRESHED_BY_CATEGORY[feature.feature?.category];
-    if (key) throttle.request(key);
+    for (const key of REFRESHED_BY_CATEGORY[feature.feature?.category] ?? []) {
+      throttle.request(key);
+    }
   });
 
   return throttle;

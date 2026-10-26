@@ -93,6 +93,26 @@ test('states are forwarded to Gladys, including those received before the discov
   bridge.stop();
 });
 
+test('the periodic republication of an unchanged state is not sent again', async () => {
+  const { client, gladys, bridge } = setup();
+  client.receive(coverConfig.topic, coverConfig.payload);
+  await flush();
+  // tydom2mqtt republishes every state at each Tydom poll.
+  for (const payload of ['30', '30', '30', '45']) {
+    client.receive(coverConfig.payload.position_topic, payload);
+    await flush();
+  }
+
+  const positions = gladys.fake.states.filter((s) =>
+    s.device_feature_external_id.endsWith('-position'),
+  );
+  assert.deepEqual(
+    positions.map((s) => s.state),
+    [30, 45],
+  );
+  bridge.stop();
+});
+
 test('Gladys commands are published on the tydom2mqtt command topics', async () => {
   const { client, gladys, bridge } = setup();
   client.receive(coverConfig.topic, coverConfig.payload);
